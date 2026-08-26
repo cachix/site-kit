@@ -75,8 +75,7 @@
   "scripts": {
     "test": "node --test tests/*.test.js",
     "test:astro": "astro check --root tests/fixtures/starlight && astro build --root tests/fixtures/starlight && node tests/verify-astro-build.js",
-    "check": "npm run test && npm run test:astro && npm pack --dry-run",
-    "build": "npm run check"
+    "check": "npm run test && npm run test:astro && npm pack --dry-run"
   },
   "peerDependencies": {
     "@astrojs/starlight": ">=0.34.0 <1.0.0",

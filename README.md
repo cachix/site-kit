@@ -4,17 +4,17 @@ Shared website behavior for Cachix projects. The package keeps product identity 
 
 ## Install
 
-Pin an immutable tag or commit:
+Pin an immutable full commit over HTTPS:
 
 ```json
 {
   "dependencies": {
-    "@cachix/site-kit": "github:cachix/site-kit#v0.1.0"
+    "@cachix/site-kit": "https://codeload.github.com/cachix/site-kit/tar.gz/<full-commit-sha>"
   }
 }
 ```
 
-The package has independent subpath exports. Consumers only load the integrations they import.
+The HTTPS tarball works without GitHub SSH credentials and does not run a package build during installation. The package has independent subpath exports. Consumers only load the integrations they import.
 
 ## Starlight
 
