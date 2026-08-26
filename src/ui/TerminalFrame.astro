@@ -1,0 +1,19 @@
+---
+interface Props {
+  title?: string;
+  status?: string;
+  class?: string;
+}
+
+const { title = 'terminal', status, class: className } = Astro.props;
+---
+
+<div class:list={['csk-terminal', className]}>
+  <div class="csk-terminal__header">
+    <span class="csk-terminal__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="csk-terminal__title">{title}</span>
+    {status && <span class="csk-terminal__status">{status}</span>}
+  </div>
+  <div class="csk-terminal__body"><slot /></div>
+</div>
+

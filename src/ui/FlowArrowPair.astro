@@ -1,0 +1,47 @@
+---
+import FlowArrow from './FlowArrow.astro';
+
+interface Props {
+  outboundLabel?: string;
+  returnLabel?: string;
+  arrival?: boolean;
+  animated?: boolean;
+  decorative?: boolean;
+  ariaLabel?: string;
+  class?: string;
+}
+
+const {
+  outboundLabel = 'derivations',
+  returnLabel = 'logs',
+  arrival = true,
+  animated = true,
+  decorative = true,
+  ariaLabel,
+  class: className,
+} = Astro.props;
+
+const accessibility = decorative
+  ? { 'aria-hidden': 'true' }
+  : { role: 'img', 'aria-label': ariaLabel ?? `${outboundLabel} and ${returnLabel} flow` };
+---
+
+<span class:list={['csk-flow-pair', className]} {...accessibility}>
+  <FlowArrow
+    label={outboundLabel}
+    packet="dot"
+    arrival={arrival}
+    animated={animated}
+    class="csk-flow-pair__outbound"
+  />
+  <FlowArrow
+    label={returnLabel}
+    labelPosition="after"
+    direction="reverse"
+    packet="bars"
+    packetCount={3}
+    arrival={arrival}
+    animated={animated}
+    class="csk-flow-pair__return"
+  />
+</span>

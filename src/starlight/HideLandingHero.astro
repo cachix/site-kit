@@ -1,0 +1,12 @@
+---
+import Default from '@astrojs/starlight/components/Hero.astro';
+
+const isLandingRoute = Astro.url.pathname === '/' || Astro.url.pathname === '';
+const title = Astro.locals.starlightRoute.entry.data.title;
+---
+
+{isLandingRoute ? (
+  <h1 id="_top" class="sr-only" data-page-title set:html={title} />
+) : (
+  <Default><slot /></Default>
+)}

@@ -1,0 +1,28 @@
+---
+interface Props {
+  href: string;
+  title: string;
+  date?: string;
+  label?: string;
+  action?: string;
+  class?: string;
+}
+
+const {
+  href,
+  title,
+  date,
+  label = 'Latest from the blog',
+  action = 'Read post →',
+  class: className,
+} = Astro.props;
+---
+
+<a class:list={['csk-latest-post', className]} href={href}>
+  <span class="csk-latest-post__aside">
+    <span class="csk-latest-post__label">{label}</span>
+    {date && <span class="csk-latest-post__date">{date}</span>}
+  </span>
+  <span class="csk-latest-post__title">{title}</span>
+  <span class="csk-latest-post__action" aria-hidden="true">{action}</span>
+</a>

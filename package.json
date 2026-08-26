@@ -1,0 +1,109 @@
+{
+  "name": "@cachix/site-kit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared website primitives and integrations for Cachix projects.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cachix/site-kit.git"
+  },
+  "bugs": "https://github.com/cachix/site-kit/issues",
+  "homepage": "https://github.com/cachix/site-kit#readme",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "files": [
+    "src"
+  ],
+  "sideEffects": [
+    "**/*.astro",
+    "**/*.css"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    },
+    "./ui": {
+      "types": "./src/ui/index.d.ts",
+      "import": "./src/ui/index.js"
+    },
+    "./ui/styles.css": "./src/ui/styles.css",
+    "./ui/*.astro": {
+      "types": "./src/ui/*.astro.d.ts",
+      "import": "./src/ui/*.astro"
+    },
+    "./motion": {
+      "types": "./src/motion/index.d.ts",
+      "import": "./src/motion/index.js"
+    },
+    "./starlight": {
+      "types": "./src/starlight/index.d.ts",
+      "import": "./src/starlight/index.js"
+    },
+    "./starlight/blog": {
+      "types": "./src/starlight/blog.d.ts",
+      "import": "./src/starlight/blog.js"
+    },
+    "./starlight/llms": {
+      "types": "./src/starlight/llms.d.ts",
+      "import": "./src/starlight/llms.js"
+    },
+    "./terminal-copy": {
+      "types": "./src/terminal-copy/index.d.ts",
+      "import": "./src/terminal-copy/index.js"
+    },
+    "./terminal-copy/styles.css": "./src/terminal-copy/styles.css",
+    "./blog": {
+      "types": "./src/blog/index.d.ts",
+      "import": "./src/blog/index.js"
+    },
+    "./cloudflare": {
+      "types": "./src/cloudflare/index.d.ts",
+      "import": "./src/cloudflare/index.js"
+    },
+    "./checks": {
+      "types": "./src/checks/index.d.ts",
+      "import": "./src/checks/index.js"
+    }
+  },
+  "bin": {
+    "cachix-site-check-links": "./src/checks/links-cli.js"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "test:astro": "astro check --root tests/fixtures/starlight && astro build --root tests/fixtures/starlight && node tests/verify-astro-build.js",
+    "check": "npm run test && npm run test:astro && npm pack --dry-run",
+    "build": "npm run check"
+  },
+  "peerDependencies": {
+    "@astrojs/starlight": ">=0.34.0 <1.0.0",
+    "astro": ">=5.0.0 <8.0.0",
+    "starlight-blog": ">=0.25.0 <1.0.0",
+    "starlight-llms-txt": ">=0.7.0 <1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@astrojs/starlight": {
+      "optional": true
+    },
+    "astro": {
+      "optional": true
+    },
+    "starlight-blog": {
+      "optional": true
+    },
+    "starlight-llms-txt": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.9",
+    "@astrojs/starlight": "0.41.4",
+    "astro": "7.1.6",
+    "starlight-blog": "0.29.0",
+    "starlight-llms-txt": "0.11.0",
+    "typescript": "6.0.3"
+  }
+}

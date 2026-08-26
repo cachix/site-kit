@@ -1,0 +1,21 @@
+:where(.sl-markdown-content .expressive-code figure .terminal-command-start) {
+  align-items: center;
+  min-block-size: 2.5rem;
+}
+
+:where(.sl-markdown-content .expressive-code figure .terminal-command-start > .code) {
+  padding-inline-end: 3rem;
+}
+
+:where(.sl-markdown-content .expressive-code figure .terminal-line-copy) {
+  inset-block-start: 50%;
+  inset-inline-end: 0.5rem;
+  transform: translateY(-50%);
+}
+
+@media (hover: hover) {
+  :where(.sl-markdown-content .expressive-code figure .terminal-command-start) {
+    min-block-size: 2rem;
+  }
+}
+

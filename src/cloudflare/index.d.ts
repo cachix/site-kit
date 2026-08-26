@@ -1,0 +1,30 @@
+export interface BasicAuthOptions {
+  username?: string;
+  passwordBinding?: string;
+  realm?: string;
+}
+
+export interface CloudflareContext {
+  env?: Record<string, string | undefined>;
+  request: Request;
+  next(): Response | Promise<Response>;
+}
+
+export function createBasicAuthMiddleware(options?: BasicAuthOptions): (
+  context: CloudflareContext,
+) => Promise<Response>;
+
+export interface GitHubMetadataOptions {
+  repository: string;
+  userAgent?: string;
+  ttl?: number;
+  includeRelease?: boolean;
+  fetch?: typeof globalThis.fetch;
+}
+
+export function createGitHubMetadataHandler(options: GitHubMetadataOptions): (
+  context?: { env?: { GITHUB_TOKEN?: string } },
+) => Promise<Response>;
+
+export function formatGitHubCount(value: number): string | undefined;
+

@@ -1,0 +1,62 @@
+---
+interface Props {
+  label?: string;
+  axis?: 'horizontal' | 'vertical';
+  direction?: 'forward' | 'reverse';
+  packet?: 'dot' | 'bars';
+  packetCount?: 1 | 2 | 3;
+  labelPosition?: 'before' | 'after';
+  arrival?: boolean;
+  animated?: boolean;
+  decorative?: boolean;
+  ariaLabel?: string;
+  class?: string;
+}
+
+const {
+  label,
+  axis = 'horizontal',
+  direction = 'forward',
+  packet = 'dot',
+  packetCount = packet === 'bars' ? 3 : 1,
+  labelPosition = 'before',
+  arrival = true,
+  animated = true,
+  decorative = true,
+  ariaLabel,
+  class: className,
+} = Astro.props;
+
+const accessibility = decorative
+  ? { 'aria-hidden': 'true' }
+  : { role: 'img', 'aria-label': ariaLabel ?? label ?? 'Flow' };
+
+const packets = Array.from({ length: packetCount });
+---
+
+<span
+  class:list={['csk-flow', className]}
+  data-arrival={arrival ? 'true' : 'false'}
+  data-axis={axis}
+  data-direction={direction}
+  data-animated={animated ? 'true' : 'false'}
+  data-label-position={labelPosition}
+  data-packet={packet}
+  {...accessibility}
+>
+  {label && <span class="csk-flow__label">{label}</span>}
+  <span class="csk-flow__frame">
+    <span class="csk-flow__track">
+      {packets.map((_, index) => (
+        <span class="csk-flow__rail" style={`--csk-flow-stagger:${index * -0.42}s`}>
+          <span class="csk-flow__packet"></span>
+        </span>
+      ))}
+      <span class="csk-flow__head">
+        <span class="csk-flow__edge csk-flow__edge--upper"></span>
+        <span class="csk-flow__edge csk-flow__edge--lower"></span>
+        <span class="csk-flow__flare"></span>
+      </span>
+    </span>
+  </span>
+</span>

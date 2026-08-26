@@ -1,0 +1,55 @@
+---
+import '@cachix/site-kit/ui/styles.css';
+import Button from '@cachix/site-kit/ui/Button.astro';
+import FlowArrow from '@cachix/site-kit/ui/FlowArrow.astro';
+import FlowArrowPair from '@cachix/site-kit/ui/FlowArrowPair.astro';
+import LatestPostBanner from '@cachix/site-kit/ui/LatestPostBanner.astro';
+import TerminalFrame from '@cachix/site-kit/ui/TerminalFrame.astro';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Site Kit components</title>
+  </head>
+  <body>
+    <main>
+      <Button href="/" variant="primary">Read the docs</Button>
+      <FlowArrow label="derivations" decorative={false} ariaLabel="Derivations flow" />
+      <FlowArrowPair decorative={false} ariaLabel="Derivations and logs flow" />
+      <LatestPostBanner
+        href="/blog/prototype/"
+        title="Site Kit prototype"
+        date="Aug 26, 2026"
+      />
+      <TerminalFrame title="terminal" status="ready"><code>site-kit</code></TerminalFrame>
+    </main>
+  </body>
+</html>
+
+<style>
+  :global(body) {
+    background: #0b1017;
+    margin: 0;
+    padding: 3rem;
+  }
+
+  main {
+    --csk-accent: #f1a342;
+    --csk-accent-strong: #5dc3d8;
+    --csk-line: #263342;
+    --csk-surface: #111923;
+    --csk-surface-muted: #17212d;
+    --csk-text: #e8edf2;
+    align-items: start;
+    display: grid;
+    gap: 2.5rem;
+    max-width: 32rem;
+  }
+
+  :global(.csk-flow-pair) {
+    --csk-flow-pair-length: 8rem;
+  }
+</style>
