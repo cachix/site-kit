@@ -49,12 +49,21 @@ import FlowArrow from '@cachix/site-kit/ui/FlowArrow.astro';
 import FlowArrowPair from '@cachix/site-kit/ui/FlowArrowPair.astro';
 import LatestPostBanner from '@cachix/site-kit/ui/LatestPostBanner.astro';
 import TerminalFrame from '@cachix/site-kit/ui/TerminalFrame.astro';
+import VersionCompatibility from '@cachix/site-kit/ui/VersionCompatibility.astro';
 ---
 
 <Button href="/docs/">Read the docs</Button>
 <FlowArrow label="derivations" />
 <FlowArrowPair outboundLabel="derivations" returnLabel="logs" />
+<VersionCompatibility version="1.2" />
+<VersionCompatibility version="1.3" kind="changed">
+  The default behavior changed.
+</VersionCompatibility>
 ```
+
+`VersionCompatibility` renders a compact “New in version” notice when used
+self-closing. Set `kind="changed"` and provide body content for behavior changes;
+the component enforces those two forms during rendering.
 
 `FlowArrowPair` uses the Obrador duplex connector as its base and adds an optional arrowhead arrival spread. Set `arrival={false}` to remove the endpoint effect. Override `--csk-flow-outbound-color`, `--csk-flow-return-color`, and `--csk-flow-pair-length` locally to preserve each website's palette and layout. Individual arrows also expose `--csk-flow-delay`, `--csk-flow-duration`, and `--csk-flow-timing`. Responsive compact layouts can set `--csk-flow-label-display`, `--csk-flow-packet-display`, or `--csk-flow-arrival-display` to `none` without targeting component internals.
 

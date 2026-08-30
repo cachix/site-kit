@@ -5,6 +5,7 @@ import FlowArrow from '@cachix/site-kit/ui/FlowArrow.astro';
 import FlowArrowPair from '@cachix/site-kit/ui/FlowArrowPair.astro';
 import LatestPostBanner from '@cachix/site-kit/ui/LatestPostBanner.astro';
 import TerminalFrame from '@cachix/site-kit/ui/TerminalFrame.astro';
+import VersionCompatibility from '@cachix/site-kit/ui/VersionCompatibility.astro';
 ---
 
 <!doctype html>
@@ -25,6 +26,10 @@ import TerminalFrame from '@cachix/site-kit/ui/TerminalFrame.astro';
         date="Aug 26, 2026"
       />
       <TerminalFrame title="terminal" status="ready"><code>site-kit</code></TerminalFrame>
+      <VersionCompatibility version="1.2" />
+      <VersionCompatibility version="1.3" kind="changed" label="Upgrade note">
+        <p>The default behavior changed.</p>
+      </VersionCompatibility>
     </main>
   </body>
 </html>

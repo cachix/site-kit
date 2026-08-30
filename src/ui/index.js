@@ -4,4 +4,5 @@ export const uiClassNames = Object.freeze({
   flowPair: "csk-flow-pair",
   latestPost: "csk-latest-post",
   terminal: "csk-terminal",
+  versionCompatibility: "csk-version-compatibility",
 });

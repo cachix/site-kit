@@ -4,4 +4,5 @@ export const uiClassNames: Readonly<{
   flowPair: "csk-flow-pair";
   latestPost: "csk-latest-post";
   terminal: "csk-terminal";
+  versionCompatibility: "csk-version-compatibility";
 }>;

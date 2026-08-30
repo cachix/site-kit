@@ -19,7 +19,13 @@ test("protects Cloudflare previews", async () => {
     next: () => nextResponse,
   });
 
-  assert.equal((await middleware(context())).status, 401);
+  const missing = await middleware(context());
+  assert.equal(missing.status, 401);
+  assert.equal(missing.headers.get("Cache-Control"), "no-store");
+  assert.equal(
+    missing.headers.get("WWW-Authenticate"),
+    'Basic realm="casita preview", charset="UTF-8"',
+  );
   assert.equal(
     (await middleware(context(`Basic ${btoa("friends:wrong")}`))).status,
     401,
@@ -28,7 +34,48 @@ test("protects Cloudflare previews", async () => {
     await middleware(context(`Basic ${btoa("friends:secret")}`)),
     nextResponse,
   );
-  assert.equal((await middleware(context(undefined, ""))).status, 503);
+  const unconfigured = await middleware(context(undefined, ""));
+  assert.equal(unconfigured.status, 503);
+  assert.equal(unconfigured.headers.get("Cache-Control"), "no-store");
+});
+
+test("rejects malformed Basic credentials", async () => {
+  const middleware = createBasicAuthMiddleware();
+  const context = (authorization) => ({
+    env: { BASIC_AUTH_PASSWORD: "secret" },
+    request: new Request("https://preview.invalid", {
+      headers: { Authorization: authorization },
+    }),
+    next: () => new Response("ok"),
+  });
+
+  for (const authorization of ["Bearer token", "Basic !!!", `Basic ${btoa("friends")}`]) {
+    assert.equal((await middleware(context(authorization))).status, 401);
+  }
+});
+
+test("supports project-specific auth settings and passwords containing colons", async () => {
+  const middleware = createBasicAuthMiddleware({
+    username: "reviewer",
+    passwordBinding: "PREVIEW_PASSWORD",
+    realm: 'docs "preview"',
+  });
+  const nextResponse = new Response("ok");
+  const context = {
+    env: { PREVIEW_PASSWORD: "secret:part" },
+    request: new Request("https://preview.invalid", {
+      headers: { Authorization: `Basic ${btoa("reviewer:secret:part")}` },
+    }),
+    next: () => nextResponse,
+  };
+
+  assert.equal(await middleware(context), nextResponse);
+
+  context.request = new Request("https://preview.invalid");
+  assert.equal(
+    (await middleware(context)).headers.get("WWW-Authenticate"),
+    'Basic realm="docs preview", charset="UTF-8"',
+  );
 });
 
 test("fetches cached GitHub metadata", async () => {

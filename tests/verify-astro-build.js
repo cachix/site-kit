@@ -22,8 +22,13 @@ assert.match(components, /data-arrival="true"/);
 assert.match(components, /class="csk-flow__edge csk-flow__edge--upper"/);
 assert.match(components, /class="csk-latest-post(?:\s|")/);
 assert.match(components, /class="csk-terminal(?:\s|")/);
+assert.match(components, /aria-label="New in version 1\.2"/);
+assert.match(components, /<strong[^>]*>New in version 1\.2<\/strong>/);
+assert.match(components, /aria-label="Upgrade note"/);
+assert.match(components, /<strong[^>]*>Changed in version 1\.3<\/strong>/);
+assert.match(components, /class="csk-version-compatibility__content/);
 assert.match(css, /csk-flow__track/);
 assert.match(css, /csk-flow-arrival-spread/);
 assert.doesNotMatch(css, /:where\(\)\s*\{/);
 
-console.log("Verified shared Hero, terminal copy, and UI styles in Astro output.");
+console.log("Verified shared Hero, terminal copy, and UI components in Astro output.");
