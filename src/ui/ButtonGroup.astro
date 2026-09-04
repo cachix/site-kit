@@ -1,0 +1,13 @@
+---
+interface Props {
+  as?: 'div' | 'nav';
+  class?: string;
+  'aria-label'?: string;
+}
+
+const { as: Tag = 'div', class: className, ...attributes } = Astro.props;
+---
+
+<Tag class:list={['csk-button-group', className]} {...attributes}>
+  <slot />
+</Tag>

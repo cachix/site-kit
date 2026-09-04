@@ -27,6 +27,7 @@ test("installs the shared navbar when enabled", () => {
   });
 
   assert.match(update.components.SocialIcons, /Navbar\.astro$/);
+  assert.match(update.components.ThemeSelect, /ThemeSelect\.astro$/);
 });
 
 test("preserves explicit consumer overrides", () => {

@@ -1,19 +1,43 @@
 ---
-interface Props {
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends HTMLAttributes<'div'> {
   title?: string;
   status?: string;
   class?: string;
+  headerClass?: string;
+  bodyClass?: string;
+  dotsClass?: string;
+  titleClass?: string;
+  statusClass?: string;
+  headerLayout?: 'inline' | 'centered';
 }
 
-const { title = 'terminal', status, class: className } = Astro.props;
+const {
+  title,
+  status,
+  class: className,
+  headerClass,
+  bodyClass,
+  dotsClass,
+  titleClass,
+  statusClass,
+  headerLayout = 'inline',
+  ...attributes
+} = Astro.props;
 ---
 
-<div class:list={['csk-terminal', className]}>
-  <div class="csk-terminal__header">
-    <span class="csk-terminal__dots" aria-hidden="true"><i></i><i></i><i></i></span>
-    <span class="csk-terminal__title">{title}</span>
-    {status && <span class="csk-terminal__status">{status}</span>}
+<div class:list={['csk-terminal', className]} {...attributes}>
+  <div class:list={['csk-terminal__header', headerClass]} data-layout={headerLayout}>
+    <slot name="header-start">
+      <span class:list={['csk-terminal__dots', dotsClass]} aria-hidden="true"><i></i><i></i><i></i></span>
+    </slot>
+    <slot name="header-title">
+      {title && <span class:list={['csk-terminal__title', titleClass]}>{title}</span>}
+    </slot>
+    <slot name="header-end">
+      {status && <span class:list={['csk-terminal__status', statusClass]}>{status}</span>}
+    </slot>
   </div>
-  <div class="csk-terminal__body"><slot /></div>
+  {Astro.slots.has('body') ? <slot name="body" /> : <div class:list={['csk-terminal__body', bodyClass]}><slot /></div>}
 </div>
-

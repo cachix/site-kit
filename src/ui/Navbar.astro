@@ -2,17 +2,29 @@
 interface Props {
   ariaLabel?: string;
   class?: string;
+  fixed?: boolean;
   sticky?: boolean;
 }
 
 const {
   ariaLabel = 'Main navigation',
   class: className,
+  fixed = false,
   sticky = false,
 } = Astro.props;
 ---
 
-<header class:list={['csk-navbar', className, { 'csk-navbar--sticky': sticky }]}>
+<header
+  class:list={[
+    'csk-navbar',
+    className,
+    {
+      'csk-navbar--fixed': fixed,
+      'csk-navbar--sticky': sticky && !fixed,
+    },
+  ]}
+  data-pagefind-ignore
+>
   <div class="csk-navbar__inner">
     <div class="csk-navbar__brand"><slot name="brand" /></div>
     <div class="csk-navbar__search"><slot name="search" /></div>
@@ -20,67 +32,5 @@ const {
     <div class="csk-navbar__menu"><slot name="menu" /></div>
   </div>
 </header>
+{fixed && <div class="csk-navbar__spacer" aria-hidden="true"></div>}
 
-<style>
-  .csk-navbar {
-    background: var(--csk-navbar-background, var(--csk-surface, transparent));
-    border-block-end: 1px solid var(--csk-navbar-border, var(--csk-line, currentColor));
-    color: var(--csk-navbar-color, var(--csk-text, currentColor));
-    height: var(--csk-navbar-height, 3.5rem);
-    width: 100%;
-    z-index: var(--csk-navbar-z-index, 50);
-  }
-
-  .csk-navbar--sticky {
-    position: sticky;
-    top: 0;
-  }
-
-  .csk-navbar__inner {
-    align-items: center;
-    display: grid;
-    gap: var(--csk-navbar-gap, 1rem);
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    height: 100%;
-    margin-inline: auto;
-    max-width: var(--csk-navbar-max-width, none);
-    padding-inline: var(--csk-navbar-padding-inline, 1rem);
-  }
-
-  .csk-navbar__brand,
-  .csk-navbar__search,
-  .csk-navbar__actions,
-  .csk-navbar__menu {
-    align-items: center;
-    display: flex;
-    min-width: 0;
-  }
-
-  .csk-navbar__search {
-    justify-self: stretch;
-  }
-
-  :global(.csk-navbar__search > *) {
-    max-width: var(--csk-navbar-search-width, 22rem);
-    width: 100%;
-  }
-
-  .csk-navbar__search:empty {
-    display: none;
-  }
-
-  .csk-navbar__menu:empty {
-    display: none;
-  }
-
-  .csk-navbar__actions {
-    gap: var(--csk-navbar-actions-gap, 1rem);
-    justify-content: flex-end;
-  }
-
-  @media (min-width: 50rem) {
-    .csk-navbar {
-      height: var(--csk-navbar-height, 4rem);
-    }
-  }
-</style>

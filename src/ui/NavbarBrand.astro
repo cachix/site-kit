@@ -1,0 +1,18 @@
+---
+interface Props {
+  ariaLabel?: string;
+  class?: string;
+  href?: string;
+}
+
+const {
+  ariaLabel,
+  class: className,
+  href = '/',
+} = Astro.props;
+---
+
+<a class:list={['csk-navbar-brand', className]} {href} aria-label={ariaLabel}>
+  <slot />
+</a>
+

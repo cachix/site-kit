@@ -1,0 +1,16 @@
+---
+interface Props {
+  current?: boolean;
+  href: string;
+}
+
+const {
+  current = false,
+  href,
+} = Astro.props;
+---
+
+<a class="csk-navbar-extra" {href} aria-current={current ? 'page' : undefined}>
+  <slot />
+</a>
+

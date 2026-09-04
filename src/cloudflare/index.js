@@ -56,6 +56,7 @@ export function createGitHubMetadataHandler({
     };
     let stars = null;
     let release = null;
+    let releaseUrl = null;
 
     try {
       const requests = [fetcher(`https://api.github.com/repos/${repository}`, options)];
@@ -67,11 +68,12 @@ export function createGitHubMetadataHandler({
       const releaseData = await responseData(releaseResult);
       if (typeof repoData?.stargazers_count === "number") stars = repoData.stargazers_count;
       if (typeof releaseData?.tag_name === "string") release = releaseData.tag_name;
+      if (typeof releaseData?.html_url === "string") releaseUrl = releaseData.html_url;
     } catch {}
 
     const successful = stars !== null || release !== null;
     return Response.json(
-      includeRelease ? { stars, release } : { stars },
+      includeRelease ? { stars, release, releaseUrl } : { stars },
       {
         headers: {
           "Cache-Control": successful ? `public, max-age=${ttl}` : "no-store",

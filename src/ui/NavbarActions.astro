@@ -1,4 +1,7 @@
 ---
+import './styles.css';
+import { navbarIcons } from './navbar-actions.js';
+
 interface VersionLink {
   label: string;
   href: string;
@@ -8,6 +11,7 @@ interface VersionLink {
 interface DocsLink {
   label: string;
   href: string;
+  current?: boolean;
 }
 
 interface Props {
@@ -19,6 +23,7 @@ interface Props {
   discordHref?: string | false;
   blog?: DocsLink;
   docs?: DocsLink;
+  menuLabel?: string;
 }
 
 const {
@@ -30,6 +35,7 @@ const {
   discordHref = 'https://discord.gg/naMgvexb6q',
   blog,
   docs,
+  menuLabel = 'Site navigation',
 } = Astro.props;
 const dynamicVersion = version === true && Boolean(repositoryHref && metadataEndpoint);
 const staticVersion = typeof version === 'object' ? version : undefined;
@@ -40,182 +46,65 @@ const releaseBase = repositoryHref ? `${repositoryHref.replace(/\/$/, '')}/relea
   data-metadata-endpoint={metadataEndpoint || undefined}
   data-release-base={releaseBase}
 >
-  <slot name="before" />
-  {
-    dynamicVersion && (
-      <a class="csk-navbar-pill csk-navbar-version" data-csk-release hidden></a>
-    )
-  }
-  {
-    staticVersion && (
-      <a
-        class="csk-navbar-pill csk-navbar-version"
-        href={staticVersion.href}
-        aria-label={staticVersion.ariaLabel ?? staticVersion.label}
-      >
-        {staticVersion.label}
-      </a>
-    )
-  }
-  {
-    repositoryHref && (
-      <a
-        class="csk-navbar-pill csk-navbar-repository"
-        href={repositoryHref}
-        aria-label={repositoryLabel}
-        rel="me"
-      >
-        <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true">
-          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
-        </svg>
-        {repositoryText && <span>{repositoryText}</span>}
-        <span class="csk-navbar-stars" data-csk-stars hidden>
-          <span aria-hidden="true">★</span>
-          <span data-csk-stars-count></span>
-        </span>
-      </a>
-    )
-  }
-  {
-    discordHref && (
-      <a class="csk-navbar-social" href={discordHref} rel="me" aria-label="Discord">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
-          <path d="M20.32 4.37a19.8 19.8 0 0 0-4.93-1.51 13.78 13.78 0 0 0-.64 1.28 18.27 18.27 0 0 0-5.5 0 12.64 12.64 0 0 0-.64-1.28h-.05A19.74 19.74 0 0 0 3.64 4.4 20.26 20.26 0 0 0 .11 18.09l.02.02a19.9 19.9 0 0 0 6.04 3.03l.04-.02a14.24 14.24 0 0 0 1.23-2.03.08.08 0 0 0-.05-.07 13.1 13.1 0 0 1-1.9-.92.08.08 0 0 1 .02-.1 10.2 10.2 0 0 0 .41-.31h.04a14.2 14.2 0 0 0 12.1 0l.04.01a9.63 9.63 0 0 0 .4.32.08.08 0 0 1-.03.1 12.29 12.29 0 0 1-1.9.91.08.08 0 0 0-.02.1 15.97 15.97 0 0 0 1.27 2.01h.04a19.84 19.84 0 0 0 6.03-3.05v-.03a20.12 20.12 0 0 0-3.57-13.69ZM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.96-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.15-1.08-2.15-2.42 0-1.33.95-2.42 2.15-2.42 1.22 0 2.18 1.1 2.16 2.42 0 1.34-.94 2.42-2.16 2.42Z" />
-        </svg>
-      </a>
-    )
-  }
-  <slot />
-  {docs && <a class="csk-navbar-link csk-navbar-docs" href={docs.href}>{docs.label}</a>}
-  {blog && <a class="csk-navbar-link csk-navbar-blog" href={blog.href}>{blog.label}</a>}
+  <button
+    class="csk-navbar-menu-button"
+    type="button"
+    aria-label={menuLabel}
+    aria-expanded="false"
+    data-csk-navbar-menu-button
+  >
+    <span class="csk-navbar-menu-icon" aria-hidden="true"></span>
+  </button>
+  <div class="csk-navbar-actions__panel" data-csk-navbar-menu-panel>
+    {
+      dynamicVersion && (
+        <a class="csk-navbar-link csk-navbar-version" data-csk-release hidden></a>
+      )
+    }
+    {
+      staticVersion && (
+        <a
+          class="csk-navbar-link csk-navbar-version"
+          href={staticVersion.href}
+          aria-label={staticVersion.ariaLabel ?? staticVersion.label}
+        >
+          {staticVersion.label}
+        </a>
+      )
+    }
+    {
+      repositoryHref && (
+        <a
+          class="csk-navbar-social csk-navbar-repository"
+          href={repositoryHref}
+          aria-label={repositoryLabel}
+          rel="me"
+        >
+          <Fragment set:html={navbarIcons.github} />
+          {repositoryText && <span>{repositoryText}</span>}
+          <span class="csk-navbar-stars" data-csk-stars hidden>
+            <span aria-hidden="true">★</span>
+            <span data-csk-stars-count></span>
+          </span>
+        </a>
+      )
+    }
+    {
+      discordHref && (
+        <a class="csk-navbar-social" href={discordHref} rel="me" aria-label="Discord">
+          <Fragment set:html={navbarIcons.discord} />
+        </a>
+      )
+    }
+    <slot />
+    <slot name="before" />
+    {docs && <a class="csk-navbar-link csk-navbar-docs" href={docs.href} aria-current={docs.current ? 'page' : undefined}>{docs.label}</a>}
+    {blog && <a class="csk-navbar-link csk-navbar-blog" href={blog.href} aria-current={blog.current ? 'page' : undefined}>{blog.label}</a>}
+    <slot name="after" />
+  </div>
 </csk-navbar-actions>
 
 <script>
-  const metadataRequests = new Map<string, Promise<Record<string, unknown>>>();
-
-  const formatCount = (count: number) =>
-    count >= 10_000
-      ? `${Math.round(count / 1000)}k`
-      : count >= 1000
-        ? `${(count / 1000).toFixed(1).replace(/\.0$/, '')}k`
-        : String(count);
-
-  class CachixNavbarActions extends HTMLElement {
-    connectedCallback() {
-      const endpoint = this.dataset.metadataEndpoint;
-      if (!endpoint || this.dataset.metadataLoaded !== undefined) return;
-      this.dataset.metadataLoaded = '';
-
-      let request = metadataRequests.get(endpoint);
-      if (!request) {
-        request = fetch(endpoint).then(async (response) => {
-          if (!response.ok) throw new Error(String(response.status));
-          return response.json();
-        });
-        metadataRequests.set(endpoint, request);
-      }
-
-      request.then((metadata) => {
-        const stars = metadata.stars;
-        if (typeof stars === 'number') {
-          const wrapper = this.querySelector<HTMLElement>('[data-csk-stars]');
-          const count = this.querySelector<HTMLElement>('[data-csk-stars-count]');
-          if (wrapper && count) {
-            count.textContent = formatCount(stars);
-            wrapper.hidden = false;
-          }
-        }
-
-        const release = typeof metadata.release === 'string'
-          ? metadata.release
-          : typeof metadata.latestRelease === 'string'
-            ? metadata.latestRelease
-            : undefined;
-        const releaseLink = this.querySelector<HTMLAnchorElement>('[data-csk-release]');
-        const releaseBase = this.dataset.releaseBase;
-        if (release && releaseLink && releaseBase) {
-          releaseLink.href = `${releaseBase}${encodeURIComponent(release)}`;
-          releaseLink.ariaLabel = `Latest release: ${release}`;
-          releaseLink.textContent = release;
-          releaseLink.hidden = false;
-        }
-      }).catch(() => {});
-    }
-  }
-
-  if (!customElements.get('csk-navbar-actions')) {
-    customElements.define('csk-navbar-actions', CachixNavbarActions);
-  }
+  import { defineNavbarActions } from './navbar-actions.js';
+  defineNavbarActions();
 </script>
-
-<style>
-  csk-navbar-actions {
-    display: contents;
-  }
-
-  .csk-navbar-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    padding: 0.2rem 0.55rem;
-    border: 1px solid var(--csk-navbar-border, var(--sl-color-hairline, currentColor));
-    border-radius: 999px;
-    background: var(--csk-navbar-background, var(--sl-color-bg-nav, transparent));
-    color: var(--csk-navbar-color, var(--sl-color-text, currentColor));
-    font-family: var(--csk-navbar-font, var(--sl-font-mono, ui-monospace, monospace));
-    font-size: var(--csk-navbar-font-size, 0.75rem);
-    font-weight: 600;
-    line-height: 1.4;
-    margin-inline-end: 0.5rem;
-    text-decoration: none;
-    transition: border-color 0.15s, color 0.15s;
-  }
-
-  .csk-navbar-pill:hover {
-    border-color: var(--csk-navbar-accent, var(--sl-color-text-accent, currentColor));
-    color: var(--csk-navbar-accent, var(--sl-color-text-accent, currentColor));
-  }
-
-  .csk-navbar-pill[hidden],
-  .csk-navbar-stars[hidden] {
-    display: none;
-  }
-
-  .csk-navbar-repository svg {
-    flex: 0 0 auto;
-  }
-
-  .csk-navbar-social {
-    color: var(--csk-navbar-accent, var(--sl-color-text-accent, currentColor));
-    display: inline-flex;
-    margin: -0.5em;
-    padding: 0.5em;
-  }
-
-  .csk-navbar-social:hover {
-    opacity: 0.66;
-  }
-
-  .csk-navbar-stars {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.2rem;
-  }
-
-  .csk-navbar-link {
-    color: var(--csk-navbar-accent, var(--sl-color-text-accent, currentColor));
-    display: none;
-    font-weight: 600;
-    text-decoration: none;
-  }
-
-  .csk-navbar-link:hover {
-    opacity: 0.66;
-  }
-
-  @media (min-width: 50rem) {
-    .csk-navbar-link {
-      display: inline-flex;
-    }
-  }
-</style>

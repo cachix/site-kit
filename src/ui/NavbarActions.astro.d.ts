@@ -9,6 +9,7 @@ export interface VersionLink {
 export interface DocsLink {
   label: string;
   href: string;
+  current?: boolean;
 }
 
 export interface Props {
@@ -20,6 +21,7 @@ export interface Props {
   discordHref?: string | false;
   blog?: DocsLink;
   docs?: DocsLink;
+  menuLabel?: string;
 }
 
 declare const NavbarActions: AstroComponentFactory & ((props: Props) => unknown);

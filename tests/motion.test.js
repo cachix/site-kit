@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createMotionLifecycle } from "../src/motion/index.js";
+import {
+  createAstroMotionLifecycle,
+  createMotionLifecycle,
+  revealOnIntersection,
+} from "../src/motion/index.js";
 
 class Events {
   listeners = new Map();
@@ -66,6 +70,7 @@ test("tracks viewport, page visibility, and reduced motion", () => {
   lifecycle.destroy();
   assert.equal(observer.disconnected, true);
   assert.equal(lifecycle.active, false);
+  assert.deepEqual(changes.at(-1), [false, false]);
 });
 
 test("is inert during server rendering", () => {
@@ -74,3 +79,72 @@ test("is inert during server rendering", () => {
   lifecycle.destroy();
 });
 
+test("destroys Astro motion before document swaps", () => {
+  const media = new Events();
+  media.matches = false;
+  const document = new Events();
+  document.visibilityState = "visible";
+  let disconnected = false;
+  const window = {
+    matchMedia: () => media,
+    IntersectionObserver: class {
+      observe() {}
+      disconnect() {
+        disconnected = true;
+      }
+    },
+  };
+  const lifecycle = createAstroMotionLifecycle({ target: {}, window, document });
+
+  assert.equal(document.listeners.has("astro:before-swap"), true);
+  document.dispatch("astro:before-swap");
+  assert.equal(disconnected, true);
+  assert.equal(lifecycle.active, false);
+  assert.equal(document.listeners.has("astro:before-swap"), false);
+});
+
+test("reveals intersecting elements once", () => {
+  const first = { classList: new Set() };
+  const second = { classList: new Set() };
+  let observer;
+  const window = {
+    matchMedia: () => ({ matches: false }),
+    IntersectionObserver: class {
+      constructor(callback, options) {
+        observer = { callback, options, observed: [], unobserved: [], disconnected: false };
+      }
+      observe(target) {
+        observer.observed.push(target);
+      }
+      unobserve(target) {
+        observer.unobserved.push(target);
+      }
+      disconnect() {
+        observer.disconnected = true;
+      }
+    },
+  };
+  const state = revealOnIntersection({
+    root: { querySelectorAll: () => [first, second] },
+    window,
+    threshold: 0.25,
+  });
+
+  assert.deepEqual(observer.observed, [first, second]);
+  assert.deepEqual(observer.options, { threshold: 0.25, rootMargin: "0px" });
+  observer.callback([{ target: first, isIntersecting: true }, { target: second, isIntersecting: false }]);
+  assert.equal(first.classList.has("visible"), true);
+  assert.equal(second.classList.has("visible"), false);
+  assert.deepEqual(observer.unobserved, [first]);
+  state.destroy();
+  assert.equal(observer.disconnected, true);
+});
+
+test("reveals immediately when reduced motion is requested", () => {
+  const element = { classList: new Set() };
+  revealOnIntersection({
+    root: { querySelectorAll: () => [element] },
+    window: { matchMedia: () => ({ matches: true }) },
+  });
+  assert.equal(element.classList.has("visible"), true);
+});

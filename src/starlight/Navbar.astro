@@ -12,6 +12,7 @@ interface VersionLink {
 interface NavbarLink {
   label: string;
   href: string;
+  current?: boolean;
 }
 
 interface Props {
@@ -23,6 +24,7 @@ interface Props {
   discordHref?: string | false;
   blog?: NavbarLink | false;
   docs?: NavbarLink | false;
+  menuLabel?: string;
 }
 
 const social = config.social || [];
@@ -38,6 +40,7 @@ const {
   discordHref = 'https://discord.gg/naMgvexb6q',
   blog,
   docs,
+  menuLabel = 'Site navigation',
 } = Astro.props;
 
 function normalizeHref(value: string) {
@@ -60,10 +63,26 @@ function firstSidebarHref(items: unknown[]): string | undefined {
 }
 
 const docsHref = Array.isArray(config.sidebar) ? firstSidebarHref(config.sidebar) : undefined;
-const resolvedBlog = blog === false ? undefined : blog;
+const resolvedBlog = blog === false
+  ? undefined
+  : blog ?? { label: 'Blog', href: '/blog/' };
 const resolvedDocs = docs === false
   ? undefined
   : docs ?? (docsHref ? { label: 'Docs', href: docsHref } : undefined);
+const currentPath = Astro.url.pathname;
+const blogPath = resolvedBlog && !/^https?:\/\//.test(resolvedBlog.href)
+  ? normalizeHref(resolvedBlog.href)
+  : undefined;
+const blogCurrent = Boolean(blogPath && currentPath.startsWith(blogPath));
+const resolvedCurrentBlog = resolvedBlog
+  ? { ...resolvedBlog, current: resolvedBlog.current ?? blogCurrent }
+  : undefined;
+const resolvedCurrentDocs = resolvedDocs
+  ? {
+      ...resolvedDocs,
+      current: resolvedDocs.current ?? (currentPath !== '/' && !blogCurrent),
+    }
+  : undefined;
 ---
 
 <NavbarActions
@@ -73,13 +92,14 @@ const resolvedDocs = docs === false
   {metadataEndpoint}
   {version}
   {discordHref}
-  blog={resolvedBlog}
-  docs={resolvedDocs}
+  {menuLabel}
+  blog={resolvedCurrentBlog}
+  docs={resolvedCurrentDocs}
 >
   <slot name="before" slot="before" />
   {
     otherLinks.map((link) => (
-      <a href={link.href} rel="me" class="csk-navbar-social-link sl-flex" aria-label={link.label}>
+      <a href={link.href} rel="me" class="csk-navbar-social sl-flex" aria-label={link.label}>
         <Icon name={link.icon} />
       </a>
     ))
@@ -92,16 +112,6 @@ const resolvedDocs = docs === false
     --sl-nav-height: 3.5rem;
   }
 
-  .csk-navbar-social-link {
-    color: var(--sl-color-text-accent);
-    padding: 0.5em;
-    margin: -0.5em;
-  }
-
-  .csk-navbar-social-link:hover {
-    opacity: 0.66;
-  }
-
   @media (min-width: 50rem) {
     :global(:root) {
       --sl-nav-height: 4rem;
@@ -110,19 +120,47 @@ const resolvedDocs = docs === false
     :global(.header .social-icons::after) {
       display: none;
     }
-  }
 
-  :global(.social-icons:not(.sl-flex)) :global(.csk-navbar-pill) {
-    display: none;
+    :global(.header .right-group),
+    :global(.header .social-icons) {
+      --csk-navbar-action-height: var(--sl-nav-height);
+      align-self: stretch;
+      height: 100%;
+    }
+
+    :global(.header .right-group) {
+      gap: 0;
+      margin-inline-end: calc(0rem - var(--sl-nav-pad-x));
+    }
+
+    :global(.header .social-icons) {
+      align-items: stretch;
+      gap: 0;
+    }
+
+    :global(header.header > .header) {
+      --csk-navbar-content-offset: calc(
+        (100% - var(--csk-navbar-content-width, 67.5rem)) / 2
+      );
+      grid-template-columns:
+        max(
+          var(--csk-navbar-brand-column-width, 17rem),
+          calc(var(--csk-navbar-content-offset) - var(--sl-nav-gap))
+        )
+        minmax(0, 1fr)
+        auto;
+    }
   }
 
   @media not all and (min-width: 50rem) {
     :global(.header .right-group) {
       display: flex !important;
+      gap: 0;
+      margin-inline-end: calc(0rem - var(--sl-nav-pad-x));
     }
 
-    :global(.header .right-group > :not(.social-icons)) {
-      display: none;
+    :global(:root[data-has-sidebar] .header .right-group) {
+      display: none !important;
     }
 
     :global(.header .title-wrapper) {
@@ -137,24 +175,72 @@ const resolvedDocs = docs === false
       margin-inline-end: calc(var(--sl-menu-button-size) + 0.75rem);
     }
 
+    :global(starlight-menu-button button) {
+      background: var(--csk-navbar-action-background, transparent);
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      color: var(--csk-navbar-action-color, var(--csk-navbar-color, var(--sl-color-gray-2, currentColor)));
+      height: var(--sl-nav-height);
+      inset-inline-end: 0;
+      padding: 0.75rem;
+      top: 0;
+      width: calc(var(--sl-menu-button-size) + 0.75rem);
+    }
+
+    :global(starlight-menu-button button:hover),
+    :global(starlight-menu-button button:focus-visible),
+    :global(starlight-menu-button[aria-expanded='true'] button) {
+      background: var(--csk-navbar-action-hover-background, var(--csk-navbar-hover-background, color-mix(in srgb, currentColor 9%, transparent)));
+      box-shadow: none;
+      color: var(--csk-navbar-action-hover-color, var(--csk-navbar-accent, var(--sl-color-text-accent, currentColor)));
+    }
+
+    :global(starlight-menu-button button:focus-visible) {
+      outline: 2px solid var(--csk-navbar-focus, var(--csk-navbar-accent, currentColor));
+      outline-offset: -2px;
+    }
+
     :global(.header .social-icons) {
-      gap: 0.5rem;
+      align-items: stretch;
+      gap: 0;
+    }
+
+    :global(.header .social-icons csk-navbar-actions),
+    :global(.header .right-group > csk-theme-toggle),
+    :global(.header .right-group > csk-theme-toggle button) {
+      --csk-navbar-action-height: var(--sl-nav-height);
+      height: var(--sl-nav-height);
     }
 
     :global(.header .social-icons::after) {
       display: none;
     }
 
-    :global(.header .social-icons) .csk-navbar-social-link[aria-label="RSS"] {
+    :global(.mobile-preferences .social-icons) {
+      width: 100%;
+    }
+
+    :global(.mobile-preferences csk-navbar-actions) {
+      display: contents;
+      height: auto;
+    }
+
+    :global(.mobile-preferences .csk-navbar-menu-button) {
       display: none;
     }
 
-    :global(.header .social-icons) :global(.csk-navbar-version) {
-      display: none;
-    }
-
-    :global(:root[data-has-hero] .header .social-icons) :global(.csk-navbar-version) {
-      display: inline-flex;
+    :global(.mobile-preferences .csk-navbar-actions__panel) {
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      display: flex;
+      inset: auto;
+      max-height: none;
+      overflow: visible;
+      padding: 0;
+      position: static;
+      width: 100%;
     }
   }
 </style>

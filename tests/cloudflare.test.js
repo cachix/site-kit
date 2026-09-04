@@ -85,13 +85,17 @@ test("fetches cached GitHub metadata", async () => {
     fetch: async (url, options) => {
       calls.push({ url, options });
       return url.endsWith("/releases/latest")
-        ? Response.json({ tag_name: "v1.2.3" })
+        ? Response.json({ tag_name: "v1.2.3", html_url: "https://github.com/cachix/casita/releases/tag/v1.2.3" })
         : Response.json({ stargazers_count: 1234 });
     },
   });
   const response = await handler({ env: { GITHUB_TOKEN: "token" } });
 
-  assert.deepEqual(await response.json(), { stars: 1234, release: "v1.2.3" });
+  assert.deepEqual(await response.json(), {
+    stars: 1234,
+    release: "v1.2.3",
+    releaseUrl: "https://github.com/cachix/casita/releases/tag/v1.2.3",
+  });
   assert.equal(response.headers.get("Cache-Control"), "public, max-age=3600");
   assert.equal(calls.length, 2);
   assert.equal(calls[0].options.headers.get("Authorization"), "Bearer token");
@@ -105,7 +109,7 @@ test("degrades GitHub failures to null metadata", async () => {
     },
   });
   const response = await handler();
-  assert.deepEqual(await response.json(), { stars: null, release: null });
+  assert.deepEqual(await response.json(), { stars: null, release: null, releaseUrl: null });
   assert.equal(response.headers.get("Cache-Control"), "no-store");
 });
 
@@ -118,7 +122,7 @@ test("preserves partial GitHub metadata", async () => {
     },
   });
   const response = await handler();
-  assert.deepEqual(await response.json(), { stars: 42, release: null });
+  assert.deepEqual(await response.json(), { stars: 42, release: null, releaseUrl: null });
   assert.equal(response.headers.get("Cache-Control"), "public, max-age=3600");
 });
 

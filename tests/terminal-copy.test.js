@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   extractTerminalCommands,
+  extractTerminalCopyText,
   terminalCopyPlugin,
 } from "../src/terminal-copy/index.js";
 
@@ -35,6 +36,39 @@ test("preserves quoted hashes", () => {
 
 test("leaves command-only blocks unchanged", () => {
   assert.equal(extractTerminalCommands("npm install\nnpm test"), "npm install\nnpm test");
+});
+
+test("copies rendered terminal lines without interactive controls", () => {
+  const ignored = [];
+  const line = (text, cleanText) => ({
+    cloneNode() {
+      const copy = {
+        textContent: text,
+        querySelectorAll(selector) {
+          assert.equal(selector, ".node, .remove");
+          return [{
+            remove() {
+              ignored.push(text);
+              copy.textContent = cleanText;
+            },
+          }];
+        },
+      };
+      return copy;
+    },
+  });
+  const target = {
+    querySelectorAll(selector) {
+      assert.equal(selector, ".line");
+      return [line("one control", "one\u00a0"), line("two control", "two")];
+    },
+  };
+
+  assert.equal(extractTerminalCopyText(target, {
+    lineSelector: ".line",
+    ignoreSelector: ".node, .remove",
+  }), "one\ntwo");
+  assert.deepEqual(ignored, ["one control", "two control"]);
 });
 
 test("installs one copy button per prompted command", () => {
@@ -89,4 +123,3 @@ function terminalBlockAst(lineCount) {
     ],
   };
 }
-

@@ -3,12 +3,14 @@ import { terminalCopyPlugin } from "../terminal-copy/index.js";
 
 const heroComponent = fileURLToPath(new URL("./HideLandingHero.astro", import.meta.url));
 const navbarComponent = fileURLToPath(new URL("./Navbar.astro", import.meta.url));
+const themeSelectComponent = fileURLToPath(new URL("./ThemeSelect.astro", import.meta.url));
 const uiStyles = fileURLToPath(new URL("../ui/styles.css", import.meta.url));
 const terminalCopyStyles = fileURLToPath(new URL("../terminal-copy/styles.css", import.meta.url));
 
 export function siteKitStarlight({
   hideLandingHero = true,
   navbar = false,
+  themeToggle = navbar,
   ui = true,
   terminalCopy = true,
 } = {}) {
@@ -25,6 +27,13 @@ export function siteKitStarlight({
             ...config.components,
             ...update.components,
             SocialIcons: navbarComponent,
+          };
+        }
+        if (themeToggle) {
+          update.components = {
+            ...config.components,
+            ...update.components,
+            ThemeSelect: themeSelectComponent,
           };
         }
 

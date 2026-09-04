@@ -12,10 +12,11 @@ try {
     console.error(result.failures.join("\n"));
     process.exitCode = 1;
   } else {
-    console.log(`Checked internal links and fragments in ${result.filesChecked} HTML files.`);
+    console.log(
+      `Checked ${result.linksChecked} internal links, ${result.fragmentsChecked} fragments, and ${result.assetsChecked} assets in ${result.filesChecked} HTML files.`,
+    );
   }
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
 }
-

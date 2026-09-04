@@ -8,6 +8,18 @@ export function extractTerminalCommandGroups(
   language?: string,
 ): TerminalCommandGroup[];
 export function extractTerminalCommands(code: string, language?: string): string;
+export function extractTerminalCopyText(
+  target: Element,
+  options?: {
+    lineSelector?: string;
+    ignoreSelector?: string;
+  },
+): string;
+export function initializeTerminalCopyButtons(options?: {
+  root?: ParentNode;
+  navigatorObject?: Pick<Navigator, "clipboard">;
+  setTimeoutFunction?: typeof setTimeout;
+}): void;
 export function terminalCopyPlugin(): {
   name: string;
   hooks: {
@@ -17,4 +29,3 @@ export function terminalCopyPlugin(): {
     }): void;
   };
 };
-

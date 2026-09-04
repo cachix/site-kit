@@ -3,10 +3,9 @@ import type { AstroComponentFactory } from 'astro/runtime/server/index.js';
 export interface Props {
   ariaLabel?: string;
   class?: string;
-  fixed?: boolean;
-  sticky?: boolean;
+  href?: string;
 }
 
-declare const Navbar: AstroComponentFactory & ((props: Props) => unknown);
+declare const NavbarBrand: AstroComponentFactory & ((props: Props) => unknown);
 
-export default Navbar;
+export default NavbarBrand;

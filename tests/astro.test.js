@@ -8,7 +8,7 @@ test("serves GitHub metadata during Astro development", async () => {
     github: {
       repository: "cachix/site-kit",
       fetch: async (url) => url.endsWith("/releases/latest")
-        ? Response.json({ tag_name: "v1.2.3" })
+        ? Response.json({ tag_name: "v1.2.3", html_url: "https://github.com/cachix/site-kit/releases/tag/v1.2.3" })
         : Response.json({ stargazers_count: 1234 }),
     },
   });
@@ -39,6 +39,7 @@ test("serves GitHub metadata during Astro development", async () => {
   assert.deepEqual(JSON.parse(response.body.toString()), {
     stars: 1234,
     release: "v1.2.3",
+    releaseUrl: "https://github.com/cachix/site-kit/releases/tag/v1.2.3",
   });
   assert.match(headers.get("content-type"), /application\/json/);
 });

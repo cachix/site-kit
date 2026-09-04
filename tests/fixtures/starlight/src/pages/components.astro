@@ -1,12 +1,17 @@
 ---
 import '@cachix/site-kit/ui/styles.css';
 import Button from '@cachix/site-kit/ui/Button.astro';
+import ButtonGroup from '@cachix/site-kit/ui/ButtonGroup.astro';
 import FlowArrow from '@cachix/site-kit/ui/FlowArrow.astro';
 import FlowArrowPair from '@cachix/site-kit/ui/FlowArrowPair.astro';
 import LatestPostBanner from '@cachix/site-kit/ui/LatestPostBanner.astro';
 import Navbar from '@cachix/site-kit/ui/Navbar.astro';
 import NavbarActions from '@cachix/site-kit/ui/NavbarActions.astro';
+import NavbarBrand from '@cachix/site-kit/ui/NavbarBrand.astro';
+import NavbarLink from '@cachix/site-kit/ui/NavbarLink.astro';
+import NavbarSearch from '@cachix/site-kit/ui/NavbarSearch.astro';
 import TerminalFrame from '@cachix/site-kit/ui/TerminalFrame.astro';
+import ThemeProvider from '@cachix/site-kit/ui/ThemeProvider.astro';
 import VersionCompatibility from '@cachix/site-kit/ui/VersionCompatibility.astro';
 ---
 
@@ -15,32 +20,38 @@ import VersionCompatibility from '@cachix/site-kit/ui/VersionCompatibility.astro
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
+    <ThemeProvider />
     <title>Site Kit components</title>
   </head>
   <body>
-    <Navbar>
-      <a slot="brand" href="/">Site Kit</a>
-      <form slot="search" action="/" role="search">
-        <input type="search" name="q" placeholder="Search" aria-label="Search" />
-      </form>
+    <Navbar fixed>
+      <NavbarBrand slot="brand" href="/">Site Kit</NavbarBrand>
+      <NavbarSearch slot="search" action="/components/" />
       <NavbarActions
         repositoryHref="https://github.com/cachix/site-kit"
         metadataEndpoint={false}
         version={false}
         blog={{ label: 'Blog', href: '/blog/' }}
         docs={{ label: 'Docs', href: '/components/' }}
-      />
+      >
+        <NavbarLink slot="before" href="/components/">Docs</NavbarLink>
+      </NavbarActions>
     </Navbar>
     <main>
-      <Button href="/" variant="primary">Read the docs</Button>
+      <ButtonGroup>
+        <Button href="/" variant="primary" arrow>Read the docs</Button>
+        <Button href="/components/" variant="secondary">Read the docs</Button>
+      </ButtonGroup>
       <FlowArrow label="derivations" decorative={false} ariaLabel="Derivations flow" />
       <FlowArrowPair decorative={false} ariaLabel="Derivations and logs flow" />
-      <LatestPostBanner
-        href="/blog/prototype/"
-        title="Site Kit prototype"
-        date="Aug 26, 2026"
-      />
-      <TerminalFrame title="terminal" status="ready"><code>site-kit</code></TerminalFrame>
+      <section class="csk-latest-post-region">
+        <LatestPostBanner
+          href="/blog/prototype/"
+          title="Site Kit prototype"
+          date="Aug 26, 2026"
+        />
+      </section>
+      <TerminalFrame id="component-terminal" data-terminal-kind="example" title="terminal" status="ready"><code>site-kit</code></TerminalFrame>
       <VersionCompatibility version="1.2" />
       <VersionCompatibility version="1.3" kind="changed" label="Upgrade note">
         <p>The default behavior changed.</p>
