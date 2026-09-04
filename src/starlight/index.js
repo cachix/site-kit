@@ -9,7 +9,7 @@ const terminalCopyStyles = fileURLToPath(new URL("../terminal-copy/styles.css", 
 
 export function siteKitStarlight({
   hideLandingHero = true,
-  navbar = false,
+  navbar = true,
   themeToggle = navbar,
   ui = true,
   terminalCopy = true,
@@ -29,7 +29,7 @@ export function siteKitStarlight({
             SocialIcons: navbarComponent,
           };
         }
-        if (themeToggle) {
+        if (themeToggle && !config.components?.ThemeSelect) {
           update.components = {
             ...config.components,
             ...update.components,
@@ -37,12 +37,17 @@ export function siteKitStarlight({
           };
         }
 
-        const customCss = [...(config.customCss ?? [])];
-        if (ui && !customCss.includes(uiStyles)) customCss.push(uiStyles);
-        if (terminalCopy && !customCss.includes(terminalCopyStyles)) {
-          customCss.push(terminalCopyStyles);
+        const existingCss = config.customCss ?? [];
+        const sharedCss = [];
+        if (ui) sharedCss.push(uiStyles);
+        if (terminalCopy) sharedCss.push(terminalCopyStyles);
+        const customCss = [
+          ...sharedCss,
+          ...existingCss.filter((stylesheet) => !sharedCss.includes(stylesheet)),
+        ];
+        if (customCss.some((stylesheet, index) => stylesheet !== existingCss[index])) {
+          update.customCss = customCss;
         }
-        if (customCss.length !== (config.customCss ?? []).length) update.customCss = customCss;
 
         if (terminalCopy && config.expressiveCode !== false) {
           const expressiveCode = config.expressiveCode ?? {};

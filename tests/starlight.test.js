@@ -13,21 +13,23 @@ test("installs shared Starlight behavior", () => {
   });
 
   assert.match(update.components.Hero, /HideLandingHero\.astro$/);
+  assert.match(update.components.SocialIcons, /Navbar\.astro$/);
+  assert.match(update.components.ThemeSelect, /ThemeSelect\.astro$/);
   assert.equal(update.customCss.length, 2);
   assert.equal(update.expressiveCode.plugins[0].name, "Cachix terminal copy");
 });
 
-test("installs the shared navbar when enabled", () => {
+test("can disable the shared navbar", () => {
   let update;
-  siteKitStarlight({ navbar: true }).hooks["config:setup"]({
+  siteKitStarlight({ navbar: false }).hooks["config:setup"]({
     config: { customCss: [], expressiveCode: {} },
     updateConfig: (value) => {
       update = value;
     },
   });
 
-  assert.match(update.components.SocialIcons, /Navbar\.astro$/);
-  assert.match(update.components.ThemeSelect, /ThemeSelect\.astro$/);
+  assert.equal(update.components.SocialIcons, undefined);
+  assert.equal(update.components.ThemeSelect, undefined);
 });
 
 test("preserves explicit consumer overrides", () => {
@@ -37,6 +39,7 @@ test("preserves explicit consumer overrides", () => {
       components: {
         Hero: "./src/Hero.astro",
         SocialIcons: "./src/SocialIcons.astro",
+        ThemeSelect: "./src/ThemeSelect.astro",
       },
       customCss: ["./src/custom.css"],
       expressiveCode: { plugins: [{ name: "Cachix terminal copy" }] },
@@ -47,7 +50,9 @@ test("preserves explicit consumer overrides", () => {
   });
 
   assert.equal(update.components, undefined);
-  assert.deepEqual(update.customCss.slice(0, 1), ["./src/custom.css"]);
+  assert.match(update.customCss[0], /ui\/styles\.css$/);
+  assert.match(update.customCss[1], /terminal-copy\/styles\.css$/);
+  assert.deepEqual(update.customCss.slice(2), ["./src/custom.css"]);
   assert.equal(update.expressiveCode, undefined);
 });
 

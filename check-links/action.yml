@@ -1,0 +1,33 @@
+name: Site Kit link validation
+description: Validate a generated website with Lychee
+inputs:
+  working-directory:
+    description: Website working directory
+    required: false
+    default: .
+  output-directory:
+    description: Generated website directory
+    required: false
+    default: dist
+  site:
+    description: Canonical website URL
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Set up Lychee
+      uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8
+      with:
+        workingDirectory: ${{ inputs.working-directory }}
+        lycheeVersion: v0.24.2
+        args: --version
+        failIfEmpty: false
+        jobSummary: false
+        checkbox: false
+    - name: Check links
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        SITE_KIT_OUTPUT_DIRECTORY: ${{ inputs.output-directory }}
+        SITE_KIT_SITE: ${{ inputs.site }}
+      run: node "$GITHUB_ACTION_PATH/../src/checks/links-cli.js" "$SITE_KIT_OUTPUT_DIRECTORY" "$SITE_KIT_SITE"

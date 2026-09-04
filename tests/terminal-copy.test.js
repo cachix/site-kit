@@ -8,7 +8,8 @@ import {
 } from "../src/terminal-copy/index.js";
 
 test("copies prompted commands without output", () => {
-  const session = `$ secretspec check
+  const session = `# Check secrets
+$ secretspec check
 All secrets are set
 $ secretspec run -- npm start`;
   assert.equal(
@@ -25,6 +26,16 @@ test("joins shell continuations and removes annotations", () => {
     extractTerminalCommands(session, "bash"),
     "secretspec init --project site-kit --profile production",
   );
+  assert.equal(
+    extractTerminalCommands(session, "console"),
+    "secretspec init --project site-kit --profile production",
+  );
+});
+
+test("preserves token boundaries across shell continuations", () => {
+  assert.equal(extractTerminalCommands("$ printf foo\\\nbar", "bash"), "printf foobar");
+  assert.equal(extractTerminalCommands("$ printf foo \\\nbar", "bash"), "printf foo bar");
+  assert.equal(extractTerminalCommands("$ printf foo\\\n    bar", "bash"), "printf foo bar");
 });
 
 test("preserves quoted hashes", () => {
@@ -32,6 +43,27 @@ test("preserves quoted hashes", () => {
     extractTerminalCommands('$ command "value # stays" https://example.test/#id'),
     'command "value # stays" https://example.test/#id',
   );
+  const continued = `$ printf "%s\\n" "hello \\
+    # world"`;
+  assert.equal(
+    extractTerminalCommands(continued, "bash"),
+    'printf "%s\\n" "hello # world"',
+  );
+});
+
+test("does not join continuations outside shell languages", () => {
+  const session = `$ command \\
+    --flag
+output`;
+  assert.equal(
+    extractTerminalCommands(session, "text"),
+    "command \\",
+  );
+});
+
+test("recognizes shell annotation boundaries", () => {
+  assert.equal(extractTerminalCommands("$ command;# note"), "command;");
+  assert.equal(extractTerminalCommands("$ printf foo\\ #bar"), "printf foo\\ #bar");
 });
 
 test("leaves command-only blocks unchanged", () => {
@@ -78,16 +110,105 @@ test("installs one copy button per prompted command", () => {
     renderData: { blockAst },
   });
   const lines = blockAst.children[0].children[0].children;
+  assert.deepEqual(
+    lines.map((line) => line.properties.className),
+    [
+      ["ec-line", "terminal-command-start"],
+      ["ec-line"],
+      ["ec-line", "terminal-command-start"],
+    ],
+  );
   assert.equal(lines[0].children[0].children[0].properties.dataCode, "one");
   assert.equal(lines[2].children[0].children[0].properties.dataCode, "two");
   assert.equal(blockAst.children.length, 1);
 });
 
-function terminalBlockAst(lineCount) {
+test("keeps the default button for command-only shell blocks", () => {
+  const blockAst = terminalBlockAst(1);
+  terminalCopyPlugin().hooks.postprocessRenderedBlock({
+    codeBlock: { language: "bash", code: "secretspec-update" },
+    renderData: { blockAst },
+  });
+
+  const line = blockAst.children[0].children[0].children[0];
+  assert.deepEqual(line.properties.className, ["ec-line"]);
+  assert.equal(line.children.length, 0);
+  assert.equal(blockAst.children[1].properties.className[0], "copy");
+});
+
+test("installs one copy button for a multiline command", () => {
+  const blockAst = terminalBlockAst(4);
+  const code = `$ command \\
+  --first \\
+  --second
+output`;
+  terminalCopyPlugin().hooks.postprocessRenderedBlock({
+    codeBlock: {
+      language: "bash",
+      code,
+    },
+    renderData: { blockAst },
+  });
+
+  const lines = blockAst.children[0].children[0].children;
+  assert.equal(lines[0].children[0].children[0].properties.dataCode, "command --first --second");
+  assert.equal(lines[1].children.length, 0);
+  assert.equal(lines[2].children.length, 0);
+});
+
+test("supports prompted terminal languages without joining continuations", () => {
+  const blockAst = terminalBlockAst(2);
+  terminalCopyPlugin().hooks.postprocessRenderedBlock({
+    codeBlock: { language: "zsh", code: "$ command --flag\noutput" },
+    renderData: { blockAst },
+  });
+
+  const line = blockAst.children[0].children[0].children[0];
+  assert.equal(line.children[0].properties.className[1], "terminal-line-copy");
+  assert.equal(line.children[0].children[0].properties.dataCode, "command --flag");
+});
+
+test("handles prompted blocks without terminal frames", () => {
+  const blockAst = terminalBlockAst(1, false);
+  terminalCopyPlugin().hooks.postprocessRenderedBlock({
+    codeBlock: { language: "bash", code: "$ command" },
+    renderData: { blockAst },
+  });
+
+  const line = blockAst.children[0].children[0].children[0];
+  assert.equal(line.children[0].properties.className[1], "terminal-line-copy");
+  assert.equal(blockAst.children.length, 1);
+});
+
+test("removes the default button for empty prompted annotations", () => {
+  const blockAst = terminalBlockAst(1);
+  terminalCopyPlugin().hooks.postprocessRenderedBlock({
+    codeBlock: { language: "bash", code: "$ # note" },
+    renderData: { blockAst },
+  });
+
+  const line = blockAst.children[0].children[0].children[0];
+  assert.equal(line.children.length, 0);
+  assert.equal(blockAst.children.length, 1);
+});
+
+test("keeps the default button when its AST cannot be cloned", () => {
+  const blockAst = terminalBlockAst(1);
+  blockAst.children[1].children = [];
+  terminalCopyPlugin().hooks.postprocessRenderedBlock({
+    codeBlock: { language: "bash", code: "$ command" },
+    renderData: { blockAst },
+  });
+
+  assert.equal(blockAst.children.length, 2);
+  assert.equal(blockAst.children[1].properties.className[0], "copy");
+});
+
+function terminalBlockAst(lineCount, isTerminal = true) {
   return {
     type: "element",
     tagName: "figure",
-    properties: { className: ["frame", "is-terminal"] },
+    properties: { className: isTerminal ? ["frame", "is-terminal"] : ["frame"] },
     children: [
       {
         type: "element",

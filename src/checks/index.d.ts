@@ -1,14 +1,11 @@
+import type { spawn } from "node:child_process";
+
 export interface LinkCheckOptions {
   outputDir: string;
-  site?: string;
+  site: string;
+  command?: string;
+  spawn?: typeof spawn;
 }
 
-export interface LinkCheckResult {
-  filesChecked: number;
-  linksChecked: number;
-  fragmentsChecked: number;
-  assetsChecked: number;
-  failures: string[];
-}
-
-export function checkInternalLinks(options: LinkCheckOptions): Promise<LinkCheckResult>;
+export function createLycheeArguments(options: Pick<LinkCheckOptions, "outputDir" | "site">): string[];
+export function checkLinks(options: LinkCheckOptions): Promise<number>;

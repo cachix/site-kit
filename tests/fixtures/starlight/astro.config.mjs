@@ -12,7 +12,7 @@ export default defineConfig({
     starlight({
       title: 'Site Kit',
       plugins: [
-        siteKitStarlight({ navbar: true }),
+        siteKitStarlight(),
         starlightBlog(siteBlogOptions()),
         starlightLlmsTxt(siteLlmsOptions('A fixture proving the shared Cachix Starlight integrations.')),
       ],
