@@ -1,0 +1,160 @@
+---
+import { Icon } from '@astrojs/starlight/components';
+import config from 'virtual:starlight/user-config';
+import NavbarActions from '../ui/NavbarActions.astro';
+
+interface VersionLink {
+  label: string;
+  href: string;
+  ariaLabel?: string;
+}
+
+interface NavbarLink {
+  label: string;
+  href: string;
+}
+
+interface Props {
+  repositoryHref?: string;
+  repositoryLabel?: string;
+  repositoryText?: string;
+  metadataEndpoint?: string | false;
+  version?: boolean | VersionLink;
+  discordHref?: string | false;
+  blog?: NavbarLink | false;
+  docs?: NavbarLink | false;
+}
+
+const social = config.social || [];
+const github = social.find((link) => link.icon === 'github');
+const otherLinks = social.filter((link) => link.icon !== 'github' && link.icon !== 'discord');
+
+const {
+  repositoryHref = github?.href,
+  repositoryLabel = 'GitHub stars',
+  repositoryText,
+  metadataEndpoint = '/api/github',
+  version = true,
+  discordHref = 'https://discord.gg/naMgvexb6q',
+  blog,
+  docs,
+} = Astro.props;
+
+function normalizeHref(value: string) {
+  if (value === '') return '/';
+  if (value.startsWith('/') || /^https?:\/\//.test(value)) return value;
+  return `/${value.replace(/^\/+|\/+$/g, '')}/`;
+}
+
+function firstSidebarHref(items: unknown[]): string | undefined {
+  for (const item of items) {
+    if (typeof item === 'string') return normalizeHref(item);
+    if (!item || typeof item !== 'object') continue;
+    if ('link' in item && typeof item.link === 'string') return normalizeHref(item.link);
+    if ('slug' in item && typeof item.slug === 'string') return normalizeHref(item.slug);
+    if ('items' in item && Array.isArray(item.items)) {
+      const nested = firstSidebarHref(item.items);
+      if (nested) return nested;
+    }
+  }
+}
+
+const docsHref = Array.isArray(config.sidebar) ? firstSidebarHref(config.sidebar) : undefined;
+const resolvedBlog = blog === false ? undefined : blog;
+const resolvedDocs = docs === false
+  ? undefined
+  : docs ?? (docsHref ? { label: 'Docs', href: docsHref } : undefined);
+---
+
+<NavbarActions
+  {repositoryHref}
+  {repositoryLabel}
+  {repositoryText}
+  {metadataEndpoint}
+  {version}
+  {discordHref}
+  blog={resolvedBlog}
+  docs={resolvedDocs}
+>
+  <slot name="before" slot="before" />
+  {
+    otherLinks.map((link) => (
+      <a href={link.href} rel="me" class="csk-navbar-social-link sl-flex" aria-label={link.label}>
+        <Icon name={link.icon} />
+      </a>
+    ))
+  }
+  <slot />
+</NavbarActions>
+
+<style>
+  :global(:root) {
+    --sl-nav-height: 3.5rem;
+  }
+
+  .csk-navbar-social-link {
+    color: var(--sl-color-text-accent);
+    padding: 0.5em;
+    margin: -0.5em;
+  }
+
+  .csk-navbar-social-link:hover {
+    opacity: 0.66;
+  }
+
+  @media (min-width: 50rem) {
+    :global(:root) {
+      --sl-nav-height: 4rem;
+    }
+
+    :global(.header .social-icons::after) {
+      display: none;
+    }
+  }
+
+  :global(.social-icons:not(.sl-flex)) :global(.csk-navbar-pill) {
+    display: none;
+  }
+
+  @media not all and (min-width: 50rem) {
+    :global(.header .right-group) {
+      display: flex !important;
+    }
+
+    :global(.header .right-group > :not(.social-icons)) {
+      display: none;
+    }
+
+    :global(.header .title-wrapper) {
+      margin-inline-end: auto;
+    }
+
+    :global(.header > .sl-flex.print\:hidden) {
+      order: 1;
+    }
+
+    :global(:root[data-has-sidebar] .header > .sl-flex.print\:hidden) {
+      margin-inline-end: calc(var(--sl-menu-button-size) + 0.75rem);
+    }
+
+    :global(.header .social-icons) {
+      gap: 0.5rem;
+    }
+
+    :global(.header .social-icons::after) {
+      display: none;
+    }
+
+    :global(.header .social-icons) .csk-navbar-social-link[aria-label="RSS"] {
+      display: none;
+    }
+
+    :global(.header .social-icons) :global(.csk-navbar-version) {
+      display: none;
+    }
+
+    :global(:root[data-has-hero] .header .social-icons) :global(.csk-navbar-version) {
+      display: inline-flex;
+    }
+  }
+</style>

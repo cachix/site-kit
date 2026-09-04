@@ -2,11 +2,13 @@ import { fileURLToPath } from "node:url";
 import { terminalCopyPlugin } from "../terminal-copy/index.js";
 
 const heroComponent = fileURLToPath(new URL("./HideLandingHero.astro", import.meta.url));
+const navbarComponent = fileURLToPath(new URL("./Navbar.astro", import.meta.url));
 const uiStyles = fileURLToPath(new URL("../ui/styles.css", import.meta.url));
 const terminalCopyStyles = fileURLToPath(new URL("../terminal-copy/styles.css", import.meta.url));
 
 export function siteKitStarlight({
   hideLandingHero = true,
+  navbar = false,
   ui = true,
   terminalCopy = true,
 } = {}) {
@@ -17,6 +19,13 @@ export function siteKitStarlight({
         const update = {};
         if (hideLandingHero && !config.components?.Hero) {
           update.components = { ...config.components, Hero: heroComponent };
+        }
+        if (navbar && !config.components?.SocialIcons) {
+          update.components = {
+            ...config.components,
+            ...update.components,
+            SocialIcons: navbarComponent,
+          };
         }
 
         const customCss = [...(config.customCss ?? [])];
@@ -40,4 +49,3 @@ export function siteKitStarlight({
     },
   };
 }
-

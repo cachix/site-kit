@@ -39,10 +39,15 @@
       "types": "./src/motion/index.d.ts",
       "import": "./src/motion/index.js"
     },
+    "./astro": {
+      "types": "./src/astro/index.d.ts",
+      "import": "./src/astro/index.js"
+    },
     "./starlight": {
       "types": "./src/starlight/index.d.ts",
       "import": "./src/starlight/index.js"
     },
+    "./starlight/Navbar.astro": "./src/starlight/Navbar.astro",
     "./starlight/blog": {
       "types": "./src/starlight/blog.d.ts",
       "import": "./src/starlight/blog.js"

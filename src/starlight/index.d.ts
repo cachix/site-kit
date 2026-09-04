@@ -1,5 +1,6 @@
 export interface SiteKitStarlightOptions {
   hideLandingHero?: boolean;
+  navbar?: boolean;
   ui?: boolean;
   terminalCopy?: boolean;
 }

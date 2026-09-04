@@ -4,6 +4,8 @@ import Button from '@cachix/site-kit/ui/Button.astro';
 import FlowArrow from '@cachix/site-kit/ui/FlowArrow.astro';
 import FlowArrowPair from '@cachix/site-kit/ui/FlowArrowPair.astro';
 import LatestPostBanner from '@cachix/site-kit/ui/LatestPostBanner.astro';
+import Navbar from '@cachix/site-kit/ui/Navbar.astro';
+import NavbarActions from '@cachix/site-kit/ui/NavbarActions.astro';
 import TerminalFrame from '@cachix/site-kit/ui/TerminalFrame.astro';
 import VersionCompatibility from '@cachix/site-kit/ui/VersionCompatibility.astro';
 ---
@@ -16,6 +18,19 @@ import VersionCompatibility from '@cachix/site-kit/ui/VersionCompatibility.astro
     <title>Site Kit components</title>
   </head>
   <body>
+    <Navbar>
+      <a slot="brand" href="/">Site Kit</a>
+      <form slot="search" action="/" role="search">
+        <input type="search" name="q" placeholder="Search" aria-label="Search" />
+      </form>
+      <NavbarActions
+        repositoryHref="https://github.com/cachix/site-kit"
+        metadataEndpoint={false}
+        version={false}
+        blog={{ label: 'Blog', href: '/blog/' }}
+        docs={{ label: 'Docs', href: '/components/' }}
+      />
+    </Navbar>
     <main>
       <Button href="/" variant="primary">Read the docs</Button>
       <FlowArrow label="derivations" decorative={false} ariaLabel="Derivations flow" />
@@ -38,7 +53,21 @@ import VersionCompatibility from '@cachix/site-kit/ui/VersionCompatibility.astro
   :global(body) {
     background: #0b1017;
     margin: 0;
-    padding: 3rem;
+  }
+
+  :global(.csk-navbar) {
+    --csk-navbar-background: #111923;
+    --csk-navbar-border: #263342;
+    --csk-navbar-color: #e8edf2;
+  }
+
+  :global(.csk-navbar input) {
+    background: #0b1017;
+    border: 1px solid #263342;
+    border-radius: 0.5rem;
+    color: #e8edf2;
+    height: 2.5rem;
+    padding-inline: 0.75rem;
   }
 
   main {
@@ -51,6 +80,7 @@ import VersionCompatibility from '@cachix/site-kit/ui/VersionCompatibility.astro
     align-items: start;
     display: grid;
     gap: 2.5rem;
+    margin: 3rem;
     max-width: 32rem;
   }
 

@@ -17,11 +17,26 @@ test("installs shared Starlight behavior", () => {
   assert.equal(update.expressiveCode.plugins[0].name, "Cachix terminal copy");
 });
 
+test("installs the shared navbar when enabled", () => {
+  let update;
+  siteKitStarlight({ navbar: true }).hooks["config:setup"]({
+    config: { customCss: [], expressiveCode: {} },
+    updateConfig: (value) => {
+      update = value;
+    },
+  });
+
+  assert.match(update.components.SocialIcons, /Navbar\.astro$/);
+});
+
 test("preserves explicit consumer overrides", () => {
   let update;
   siteKitStarlight().hooks["config:setup"]({
     config: {
-      components: { Hero: "./src/Hero.astro" },
+      components: {
+        Hero: "./src/Hero.astro",
+        SocialIcons: "./src/SocialIcons.astro",
+      },
       customCss: ["./src/custom.css"],
       expressiveCode: { plugins: [{ name: "Cachix terminal copy" }] },
     },
@@ -37,7 +52,7 @@ test("preserves explicit consumer overrides", () => {
 
 test("can disable every optional feature", () => {
   let called = false;
-  siteKitStarlight({ hideLandingHero: false, ui: false, terminalCopy: false })
+  siteKitStarlight({ hideLandingHero: false, navbar: false, ui: false, terminalCopy: false })
     .hooks["config:setup"]({
       config: {},
       updateConfig: () => {
@@ -46,4 +61,3 @@ test("can disable every optional feature", () => {
     });
   assert.equal(called, false);
 });
-
