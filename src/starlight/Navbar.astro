@@ -29,6 +29,7 @@ interface Props {
 
 const social = config.social || [];
 const github = social.find((link) => link.icon === 'github');
+const discord = social.find((link) => link.icon === 'discord');
 const otherLinks = social.filter((link) => link.icon !== 'github' && link.icon !== 'discord');
 
 const {
@@ -37,7 +38,7 @@ const {
   repositoryText,
   metadataEndpoint = '/api/github',
   version = true,
-  discordHref = 'https://discord.gg/naMgvexb6q',
+  discordHref = discord?.href,
   blog,
   docs,
   menuLabel = 'Site navigation',

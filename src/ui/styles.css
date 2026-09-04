@@ -213,7 +213,7 @@ csk-theme-toggle button:hover {
   display: none;
 }
 
-@media not all and (min-width: 50rem) {
+@media not all and (min-width: 68.75rem) {
   .csk-navbar__inner {
     gap: var(--csk-navbar-gap-compact, 0.5rem);
   }
