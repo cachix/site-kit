@@ -1,0 +1,74 @@
+---
+import Default from '@astrojs/starlight/components/Footer.astro';
+import config from 'virtual:starlight/user-config';
+import SiteFooter, { type FooterColumn, type FooterLink } from '../ui/SiteFooter.astro';
+
+const isSplash = Astro.locals.starlightRoute?.entry?.data?.template === 'splash';
+const base = import.meta.env.BASE_URL;
+const footerConfig = (import.meta.env.CSK_FOOTER_CONFIG ?? {}) as {
+  title?: string;
+  description?: string;
+  columns?: FooterColumn[];
+  copyright?: string;
+};
+const defaultTitle = typeof config.title === 'string' ? config.title : Object.values(config.title ?? {})[0] ?? '';
+const defaultDescription = typeof config.description === 'string'
+  ? config.description
+  : typeof config.tagline === 'string'
+    ? config.tagline
+    : undefined;
+
+const resolveLink = (item: Record<string, unknown>): FooterLink | undefined => {
+  const label = typeof item.label === 'string' ? item.label : undefined;
+  if (!label) return undefined;
+  if (typeof item.link === 'string') {
+    const href = /^(?:https?:|mailto:|#|\/)/.test(item.link) ? item.link : `${base}${item.link}`;
+    return { href, label };
+  }
+  if (typeof item.slug === 'string') {
+    const slug = item.slug.replace(/^\/+|\/+$/g, '');
+    return { href: `${base}${slug ? `${slug}/` : ''}`, label };
+  }
+  return undefined;
+};
+
+const collectLinks = (items: unknown[], links: FooterLink[] = []): FooterLink[] => {
+  for (const value of items) {
+    if (!value || typeof value !== 'object') continue;
+    const item = value as Record<string, unknown>;
+    const link = resolveLink(item);
+    if (link) links.push(link);
+    if (links.length >= 5) break;
+    if (Array.isArray(item.items)) collectLinks(item.items, links);
+    if (links.length >= 5) break;
+  }
+  return links;
+};
+
+const sidebar = Array.isArray(config.sidebar) ? config.sidebar : [];
+const navigationColumns = sidebar.flatMap((value): FooterColumn[] => {
+  if (!value || typeof value !== 'object') return [];
+  const group = value as Record<string, unknown>;
+  const heading = typeof group.label === 'string' ? group.label : undefined;
+  const links = Array.isArray(group.items) ? collectLinks(group.items) : [];
+  return heading && links.length ? [{ heading, links }] : [];
+});
+const socialLinks = Array.isArray(config.social)
+  ? config.social.flatMap((value): FooterLink[] => {
+      if (!value || typeof value !== 'object') return [];
+      const link = value as Record<string, unknown>;
+      return typeof link.label === 'string' && typeof link.href === 'string'
+        ? [{ href: link.href, label: link.label, icon: typeof link.icon === 'string' ? link.icon : undefined }]
+        : [];
+    })
+  : [];
+const defaultColumns = navigationColumns.slice(0, socialLinks.length ? 3 : 4);
+if (socialLinks.length) defaultColumns.push({ heading: 'Community', links: socialLinks });
+const title = footerConfig.title ?? defaultTitle;
+const description = footerConfig.description ?? defaultDescription;
+const columns = footerConfig.columns ?? defaultColumns;
+const copyright = footerConfig.copyright;
+---
+
+{!isSplash && <Default {...Astro.props}><slot /></Default>}
+<SiteFooter {title} {description} {columns} {copyright} />

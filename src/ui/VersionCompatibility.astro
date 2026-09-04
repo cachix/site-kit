@@ -47,7 +47,7 @@ if (kind === 'changed' && !hasDetails) {
     margin-block: 1rem;
     padding: 0.65rem 0.8rem;
     border: 1px solid var(--sl-color-gray-5);
-    border-radius: 0.5rem;
+    border-radius: var(--csk-version-radius, var(--csk-corner-radius, 0.5rem));
     background: var(--sl-color-bg-inline-code);
     background: color-mix(in srgb, var(--sl-color-gray-6) 24%, transparent);
     color: var(--sl-color-gray-2);

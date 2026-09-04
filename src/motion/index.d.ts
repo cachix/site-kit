@@ -31,3 +31,14 @@ export interface RevealOnIntersectionState {
 }
 
 export function revealOnIntersection(options?: RevealOnIntersectionOptions): RevealOnIntersectionState;
+
+export interface InitializeViewportRevealsOptions {
+  root?: ParentNode;
+  automatic?: boolean;
+  threshold?: number | number[];
+  rootMargin?: string;
+  window?: Window;
+  document?: Document;
+}
+
+export function initializeViewportReveals(options?: InitializeViewportRevealsOptions): RevealOnIntersectionState;

@@ -3,6 +3,52 @@ import test from "node:test";
 
 import { siteKitAstro } from "../src/astro/index.js";
 
+test("injects shared viewport reveals on every page", () => {
+  const integration = siteKitAstro();
+  const scripts = [];
+  integration.hooks["astro:config:setup"]({
+    injectScript(stage, content) {
+      scripts.push([stage, content]);
+    },
+  });
+
+  assert.equal(scripts[0][0], "head-inline");
+  assert.match(scripts[0][1], /cskReveals/);
+  assert.equal(scripts[1][0], "page");
+  assert.match(scripts[1][1], /initializeViewportReveals/);
+  assert.match(scripts[1][1], /astro:page-load/);
+});
+
+test("injects an opt-in shared RSS route", () => {
+  const integration = siteKitAstro({
+    rss: { title: "Site Kit", description: "Shared site features" },
+  });
+  let route;
+  let config;
+  integration.hooks["astro:config:setup"]({
+    injectRoute(value) {
+      route = value;
+    },
+    injectScript() {},
+    updateConfig(value) {
+      config = value;
+    },
+  });
+
+  assert.equal(route.pattern, "/blog/rss.xml");
+  assert.match(route.entrypoint.href, /RssEndpoint\.js$/);
+  assert.deepEqual(
+    JSON.parse(config.vite.define["import.meta.env.CSK_RSS_CONFIG"]),
+    {
+      collection: "blog",
+      endpoint: "/blog/rss.xml",
+      itemBase: "/blog/",
+      title: "Site Kit",
+      description: "Shared site features",
+    },
+  );
+});
+
 test("serves GitHub metadata during Astro development", async () => {
   const integration = siteKitAstro({
     github: {

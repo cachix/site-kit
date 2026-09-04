@@ -14,9 +14,15 @@ const {
   pagefindBase = '/pagefind/',
   placeholder = 'Search',
 } = Astro.props;
+const developmentWarning = import.meta.env.DEV
+  ? 'Search is only available in production builds. \nTry building and previewing the site to test it out locally.'
+  : undefined;
 ---
 
-<csk-navbar-search data-pagefind-base={pagefindBase}>
+<csk-navbar-search
+  data-pagefind-base={pagefindBase}
+  data-development-search={developmentWarning ? '' : undefined}
+>
   <button type="button" data-open-search aria-label={ariaLabel} aria-keyshortcuts="Control+K">
     <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
       <circle cx="11" cy="11" r="7"></circle>
@@ -42,6 +48,7 @@ const {
         />
       </form>
       <ul data-search-results aria-live="polite" hidden></ul>
+      {developmentWarning && <div class="csk-navbar-search__development" dir="ltr"><p>{developmentWarning}</p></div>}
     </div>
   </dialog>
 </csk-navbar-search>
@@ -62,6 +69,7 @@ const {
         const form = this.querySelector('form');
         const input = this.querySelector('input');
         const results = this.querySelector('[data-search-results]');
+        const development = this.hasAttribute('data-development-search');
         if (!openButton || !dialog || !frame || !form || !input || !results) return;
 
         if (platformKey && /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform)) {
@@ -125,8 +133,10 @@ const {
         const openSearch = () => {
           if (!dialog.open) dialog.showModal();
           document.body.toggleAttribute('data-search-modal-open', true);
-          input.focus();
-          input.select();
+          if (!development) {
+            input.focus();
+            input.select();
+          }
         };
 
         const closeSearch = () => {
@@ -199,13 +209,14 @@ const {
     align-items: center;
     background: var(--csk-navbar-search-background, var(--csk-navbar-background, transparent));
     border: 1px solid var(--csk-navbar-border, currentColor);
-    border-radius: 0.5rem;
+    border-radius: var(--csk-navbar-search-radius, var(--csk-corner-radius, 0.5rem));
     color: var(--csk-navbar-muted, var(--csk-navbar-color, currentColor));
     cursor: pointer;
     display: flex;
     gap: 0.5rem;
     height: 2.5rem;
     padding: 0 0.5rem 0 0.75rem;
+    transition: border-color var(--csk-interaction-duration) ease, color var(--csk-interaction-duration) ease;
     width: 100%;
   }
 
@@ -232,7 +243,7 @@ const {
   button[data-open-search] kbd {
     background: color-mix(in srgb, currentColor 8%, transparent);
     border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
-    border-radius: 0.25rem;
+    border-radius: var(--csk-navbar-search-key-radius, var(--csk-corner-radius, 0.25rem));
     font-family: var(--csk-navbar-font, ui-monospace, monospace);
     font-size: 0.68rem;
     line-height: 1;
@@ -243,7 +254,7 @@ const {
   dialog {
     background: var(--csk-navbar-search-modal-background, var(--csk-navbar-background, white));
     border: 1px solid var(--csk-navbar-border, currentColor);
-    border-radius: 0.5rem;
+    border-radius: var(--csk-navbar-search-radius, var(--csk-corner-radius, 0.5rem));
     box-shadow: 0 1.5rem 4rem color-mix(in srgb, black 28%, transparent);
     color: var(--csk-navbar-color, currentColor);
     margin: 4rem auto auto;
@@ -272,10 +283,25 @@ const {
     padding: 1.5rem;
   }
 
+  csk-navbar-search[data-development-search] .csk-navbar-search__frame {
+    justify-content: center;
+  }
+
+  csk-navbar-search[data-development-search] form,
+  csk-navbar-search[data-development-search] ul {
+    display: none;
+  }
+
+  .csk-navbar-search__development {
+    margin: auto;
+    text-align: center;
+    white-space: pre-line;
+  }
+
   form {
     align-items: center;
     border: 1px solid var(--csk-navbar-border, currentColor);
-    border-radius: 0.5rem;
+    border-radius: var(--csk-navbar-search-radius, var(--csk-corner-radius, 0.5rem));
     display: flex;
     flex: 0 0 auto;
     min-height: 3.5rem;
@@ -323,11 +349,12 @@ const {
 
   :global(csk-navbar-search [data-search-results] li a) {
     border: 1px solid var(--csk-navbar-border, currentColor);
-    border-radius: 0.5rem;
+    border-radius: var(--csk-navbar-search-radius, var(--csk-corner-radius, 0.5rem));
     color: inherit;
     display: block;
     padding: 0.875rem 1rem;
     text-decoration: none;
+    transition: border-color var(--csk-interaction-duration) ease;
   }
 
   :global(csk-navbar-search [data-search-results] li a:hover),

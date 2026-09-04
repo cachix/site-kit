@@ -136,3 +136,43 @@ export function revealOnIntersection({
     },
   };
 }
+
+export function initializeViewportReveals({
+  root,
+  automatic = true,
+  threshold = 0.12,
+  rootMargin = "0px 0px -6% 0px",
+  window: windowObject = globalThis.window,
+  document: documentObject = globalThis.document,
+} = {}) {
+  const scope = root ?? documentObject;
+  const selector = ".csk-reveal";
+
+  if (automatic && scope?.querySelector) {
+    const hero = scope.querySelector(".csk-landing-hero");
+    if (hero) {
+      const candidates = [...(hero.children ?? [])];
+      for (const sibling of hero.parentElement?.children ?? []) {
+        if (sibling !== hero && sibling.matches?.("section")) candidates.push(sibling);
+      }
+
+      for (const element of candidates) {
+        if (element.matches?.(".csk-latest-post-region")
+          || element.getAttribute?.("aria-hidden") === "true"
+          || element.matches?.(selector)
+          || element.querySelector?.(selector)) continue;
+        element.classList?.add("csk-reveal");
+      }
+    }
+  }
+
+  return revealOnIntersection({
+    root: scope,
+    selector,
+    visibleClass: "csk-reveal--visible",
+    threshold,
+    rootMargin,
+    window: windowObject,
+    document: documentObject,
+  });
+}

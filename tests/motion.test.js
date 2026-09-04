@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   createAstroMotionLifecycle,
   createMotionLifecycle,
+  initializeViewportReveals,
   revealOnIntersection,
 } from "../src/motion/index.js";
 
@@ -147,4 +148,43 @@ test("reveals immediately when reduced motion is requested", () => {
     window: { matchMedia: () => ({ matches: true }) },
   });
   assert.equal(element.classList.has("visible"), true);
+});
+
+test("marks landing content and sections for shared viewport reveals", () => {
+  const createElement = ({ matches = () => false, querySelector = () => null } = {}) => ({
+    classList: new Set(),
+    getAttribute: () => null,
+    matches,
+    querySelector,
+  });
+  const heroContent = createElement();
+  const latestPost = createElement({ matches: (selector) => selector === ".csk-latest-post-region" });
+  const section = createElement({ matches: (selector) => selector === "section" });
+  const hero = createElement();
+  hero.children = [latestPost, heroContent];
+  hero.parentElement = { children: [hero, section] };
+  const root = {
+    querySelector: () => hero,
+    querySelectorAll: () => [heroContent, section],
+  };
+  let observed;
+  const window = {
+    matchMedia: () => ({ matches: false }),
+    IntersectionObserver: class {
+      constructor() {
+        observed = [];
+      }
+      observe(element) {
+        observed.push(element);
+      }
+      disconnect() {}
+    },
+  };
+
+  initializeViewportReveals({ root, window, document: root });
+
+  assert.equal(heroContent.classList.has("csk-reveal"), true);
+  assert.equal(section.classList.has("csk-reveal"), true);
+  assert.equal(latestPost.classList.has("csk-reveal"), false);
+  assert.deepEqual(observed, [heroContent, section]);
 });

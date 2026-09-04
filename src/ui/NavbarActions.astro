@@ -1,6 +1,7 @@
 ---
 import './styles.css';
 import { navbarIcons } from './navbar-actions.js';
+import ThemeToggle from './ThemeToggle.astro';
 
 interface VersionLink {
   label: string;
@@ -21,9 +22,12 @@ interface Props {
   metadataEndpoint?: string | false;
   version?: boolean | VersionLink;
   discordHref?: string | false;
+  rss?: boolean | DocsLink;
   blog?: DocsLink;
   docs?: DocsLink;
   menuLabel?: string;
+  theme?: boolean;
+  themeLabel?: string;
 }
 
 const {
@@ -33,13 +37,21 @@ const {
   metadataEndpoint = '/api/github',
   version = true,
   discordHref = false,
+  rss = true,
   blog,
   docs,
   menuLabel = 'Site navigation',
+  theme = false,
+  themeLabel = 'Toggle theme',
 } = Astro.props;
 const dynamicVersion = version === true && Boolean(repositoryHref && metadataEndpoint);
 const staticVersion = typeof version === 'object' ? version : undefined;
 const releaseBase = repositoryHref ? `${repositoryHref.replace(/\/$/, '')}/releases/tag/` : undefined;
+const resolvedRss = !blog || rss === false
+  ? undefined
+  : typeof rss === 'object'
+    ? rss
+    : { label: 'RSS', href: `${blog.href.replace(/\/?$/, '/')}rss.xml` };
 ---
 
 <csk-navbar-actions
@@ -96,6 +108,13 @@ const releaseBase = repositoryHref ? `${repositoryHref.replace(/\/$/, '')}/relea
         </a>
       )
     }
+    {
+      resolvedRss && (
+        <a class="csk-navbar-social" href={resolvedRss.href} rel="alternate" type="application/rss+xml" aria-label={resolvedRss.label}>
+          <Fragment set:html={navbarIcons.rss} />
+        </a>
+      )
+    }
     <slot />
     <slot name="before" />
     {docs && <a class="csk-navbar-link csk-navbar-docs" href={docs.href} aria-current={docs.current ? 'page' : undefined}>{docs.label}</a>}
@@ -103,6 +122,7 @@ const releaseBase = repositoryHref ? `${repositoryHref.replace(/\/$/, '')}/relea
     <slot name="after" />
   </div>
 </csk-navbar-actions>
+{theme && <ThemeToggle label={themeLabel} />}
 
 <script>
   import { defineNavbarActions } from './navbar-actions.js';

@@ -11,6 +11,13 @@ export interface GitHubMetadataOptions {
 
 export interface SiteKitAstroOptions {
   github?: GitHubMetadataOptions;
+  rss?: {
+    title: string;
+    description: string;
+    collection?: string;
+    endpoint?: string;
+    itemBase?: string;
+  };
 }
 
 export function siteKitAstro(options?: SiteKitAstroOptions): AstroIntegration;

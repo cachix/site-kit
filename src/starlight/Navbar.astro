@@ -22,6 +22,7 @@ interface Props {
   metadataEndpoint?: string | false;
   version?: boolean | VersionLink;
   discordHref?: string | false;
+  rss?: boolean | NavbarLink;
   blog?: NavbarLink | false;
   docs?: NavbarLink | false;
   menuLabel?: string;
@@ -30,7 +31,8 @@ interface Props {
 const social = config.social || [];
 const github = social.find((link) => link.icon === 'github');
 const discord = social.find((link) => link.icon === 'discord');
-const otherLinks = social.filter((link) => link.icon !== 'github' && link.icon !== 'discord');
+const socialRss = social.find((link) => link.icon === 'rss');
+const otherLinks = social.filter((link) => link.icon !== 'github' && link.icon !== 'discord' && link.icon !== 'rss');
 
 const {
   repositoryHref = github?.href,
@@ -39,6 +41,7 @@ const {
   metadataEndpoint = '/api/github',
   version = true,
   discordHref = discord?.href,
+  rss = socialRss ? { label: socialRss.label, href: socialRss.href } : true,
   blog,
   docs,
   menuLabel = 'Site navigation',
@@ -93,6 +96,7 @@ const resolvedCurrentDocs = resolvedDocs
   {metadataEndpoint}
   {version}
   {discordHref}
+  {rss}
   {menuLabel}
   blog={resolvedCurrentBlog}
   docs={resolvedCurrentDocs}
@@ -111,6 +115,26 @@ const resolvedCurrentDocs = resolvedDocs
 <style>
   :global(:root) {
     --sl-nav-height: 3.5rem;
+  }
+
+  :global(header.header) {
+    -webkit-backdrop-filter: var(--csk-navbar-backdrop-filter, blur(14px));
+    backdrop-filter: var(--csk-navbar-backdrop-filter, blur(14px));
+    background: var(--csk-navbar-background, color-mix(in srgb, var(--sl-color-bg-nav) 88%, transparent));
+  }
+
+  :global(header.header > .header) {
+    backdrop-filter: none;
+    background: transparent;
+  }
+
+  :global(site-search button[data-open-modal]),
+  :global(site-search dialog) {
+    border-radius: var(--csk-navbar-search-radius, var(--csk-corner-radius, 0.5rem));
+  }
+
+  :global(site-search button > kbd) {
+    border-radius: var(--csk-navbar-search-key-radius, var(--csk-corner-radius, 0.25rem));
   }
 
   @media (min-width: 50rem) {
@@ -140,14 +164,8 @@ const resolvedCurrentDocs = resolvedDocs
     }
 
     :global(header.header > .header) {
-      --csk-navbar-content-offset: calc(
-        (100% - var(--csk-navbar-content-width, 67.5rem)) / 2
-      );
       grid-template-columns:
-        max(
-          var(--csk-navbar-brand-column-width, 17rem),
-          calc(var(--csk-navbar-content-offset) - var(--sl-nav-gap))
-        )
+        max-content
         minmax(0, 1fr)
         auto;
     }
@@ -186,6 +204,7 @@ const resolvedCurrentDocs = resolvedDocs
       inset-inline-end: 0;
       padding: 0.75rem;
       top: 0;
+      transition: background-color var(--csk-interaction-duration) ease, color var(--csk-interaction-duration) ease;
       width: calc(var(--sl-menu-button-size) + 0.75rem);
     }
 

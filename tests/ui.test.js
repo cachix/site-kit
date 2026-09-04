@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { defineNavbarActions, isNavbarPathCurrent } from "../src/ui/navbar-actions.js";
+import { defineNavbarActions, isNavbarPathCurrent, navbarIcons } from "../src/ui/navbar-actions.js";
+import { uiClassNames } from "../src/ui/index.js";
 import {
   createThemeInitializationScript,
   defineThemeToggle,
@@ -17,6 +18,22 @@ test("matches exact and section navbar paths", () => {
   assert.equal(isNavbarPathCurrent("/docs-old", "/docs", true), false);
   assert.equal(isNavbarPathCurrent("/blog/post", "/blog"), false);
   assert.equal(isNavbarPathCurrent("/", "/"), true);
+});
+
+test("provides the shared RSS icon", () => {
+  assert.match(navbarIcons.rss, /<svg/);
+});
+
+test("exports the shared text link class", () => {
+  assert.equal(uiClassNames.textLink, "csk-text-link");
+});
+
+test("exports the shared latest post region class", () => {
+  assert.equal(uiClassNames.latestPostRegion, "csk-latest-post-region");
+});
+
+test("exports the shared landing hero class", () => {
+  assert.equal(uiClassNames.landingHero, "csk-landing-hero");
 });
 
 test("opens and closes the shared navbar menu", () => {
