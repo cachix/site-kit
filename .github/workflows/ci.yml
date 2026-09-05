@@ -20,3 +20,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      - name: Check links
+        uses: ./check-links
+        with:
+          working-directory: tests/fixtures/starlight
+          site: https://site-kit.invalid

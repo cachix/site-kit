@@ -1,0 +1,14 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends HTMLAttributes<'section'> {
+  class?: string;
+  glow?: boolean;
+}
+
+const { class: className, glow = true, ...attributes } = Astro.props;
+---
+
+<section class:list={['csk-landing-hero', { 'csk-landing-hero--no-glow': !glow }, className]} {...attributes}>
+  <slot />
+</section>

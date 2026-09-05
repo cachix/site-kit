@@ -1,0 +1,266 @@
+---
+import { Icon } from '@astrojs/starlight/components';
+import config from 'virtual:starlight/user-config';
+import NavbarActions from '../ui/NavbarActions.astro';
+
+interface VersionLink {
+  label: string;
+  href: string;
+  ariaLabel?: string;
+}
+
+interface NavbarLink {
+  label: string;
+  href: string;
+  current?: boolean;
+}
+
+interface Props {
+  repositoryHref?: string;
+  repositoryLabel?: string;
+  repositoryText?: string;
+  metadataEndpoint?: string | false;
+  version?: boolean | VersionLink;
+  discordHref?: string | false;
+  rss?: boolean | NavbarLink;
+  blog?: NavbarLink | false;
+  docs?: NavbarLink | false;
+  menuLabel?: string;
+}
+
+const social = config.social || [];
+const github = social.find((link) => link.icon === 'github');
+const discord = social.find((link) => link.icon === 'discord');
+const socialRss = social.find((link) => link.icon === 'rss');
+const otherLinks = social.filter((link) => link.icon !== 'github' && link.icon !== 'discord' && link.icon !== 'rss');
+
+const {
+  repositoryHref = github?.href,
+  repositoryLabel = 'GitHub stars',
+  repositoryText,
+  metadataEndpoint = '/api/github',
+  version = true,
+  discordHref = discord?.href,
+  rss = socialRss ? { label: socialRss.label, href: socialRss.href } : true,
+  blog,
+  docs,
+  menuLabel = 'Site navigation',
+} = Astro.props;
+
+function normalizeHref(value: string) {
+  if (value === '') return '/';
+  if (value.startsWith('/') || /^https?:\/\//.test(value)) return value;
+  return `/${value.replace(/^\/+|\/+$/g, '')}/`;
+}
+
+function firstSidebarHref(items: unknown[]): string | undefined {
+  for (const item of items) {
+    if (typeof item === 'string') return normalizeHref(item);
+    if (!item || typeof item !== 'object') continue;
+    if ('link' in item && typeof item.link === 'string') return normalizeHref(item.link);
+    if ('slug' in item && typeof item.slug === 'string') return normalizeHref(item.slug);
+    if ('items' in item && Array.isArray(item.items)) {
+      const nested = firstSidebarHref(item.items);
+      if (nested) return nested;
+    }
+  }
+}
+
+const docsHref = Array.isArray(config.sidebar) ? firstSidebarHref(config.sidebar) : undefined;
+const resolvedBlog = blog === false
+  ? undefined
+  : blog ?? { label: 'Blog', href: '/blog/' };
+const resolvedDocs = docs === false
+  ? undefined
+  : docs ?? (docsHref ? { label: 'Docs', href: docsHref } : undefined);
+const currentPath = Astro.url.pathname;
+const blogPath = resolvedBlog && !/^https?:\/\//.test(resolvedBlog.href)
+  ? normalizeHref(resolvedBlog.href)
+  : undefined;
+const blogCurrent = Boolean(blogPath && currentPath.startsWith(blogPath));
+const resolvedCurrentBlog = resolvedBlog
+  ? { ...resolvedBlog, current: resolvedBlog.current ?? blogCurrent }
+  : undefined;
+const resolvedCurrentDocs = resolvedDocs
+  ? {
+      ...resolvedDocs,
+      current: resolvedDocs.current ?? (currentPath !== '/' && !blogCurrent),
+    }
+  : undefined;
+---
+
+<NavbarActions
+  {repositoryHref}
+  {repositoryLabel}
+  {repositoryText}
+  {metadataEndpoint}
+  {version}
+  {discordHref}
+  {rss}
+  {menuLabel}
+  blog={resolvedCurrentBlog}
+  docs={resolvedCurrentDocs}
+>
+  <slot name="before" slot="before" />
+  {
+    otherLinks.map((link) => (
+      <a href={link.href} rel="me" class="csk-navbar-social sl-flex" aria-label={link.label}>
+        <Icon name={link.icon} />
+      </a>
+    ))
+  }
+  <slot />
+</NavbarActions>
+
+<style>
+  :global(:root) {
+    --sl-nav-height: 3.5rem;
+  }
+
+  :global(header.header) {
+    -webkit-backdrop-filter: var(--csk-navbar-backdrop-filter, blur(14px));
+    backdrop-filter: var(--csk-navbar-backdrop-filter, blur(14px));
+    background: var(--csk-navbar-background, color-mix(in srgb, var(--sl-color-bg-nav) 88%, transparent));
+  }
+
+  :global(header.header > .header) {
+    backdrop-filter: none;
+    background: transparent;
+  }
+
+  :global(site-search button[data-open-modal]),
+  :global(site-search dialog) {
+    border-radius: var(--csk-navbar-search-radius, var(--csk-corner-radius, 0.5rem));
+  }
+
+  :global(site-search button > kbd) {
+    border-radius: var(--csk-navbar-search-key-radius, var(--csk-corner-radius, 0.25rem));
+  }
+
+  @media (min-width: 50rem) {
+    :global(:root) {
+      --sl-nav-height: 4rem;
+    }
+
+    :global(.header .social-icons::after) {
+      display: none;
+    }
+
+    :global(.header .right-group),
+    :global(.header .social-icons) {
+      --csk-navbar-action-height: var(--sl-nav-height);
+      align-self: stretch;
+      height: 100%;
+    }
+
+    :global(.header .right-group) {
+      gap: 0;
+      margin-inline-end: calc(0rem - var(--sl-nav-pad-x));
+    }
+
+    :global(.header .social-icons) {
+      align-items: stretch;
+      gap: 0;
+    }
+
+    :global(header.header > .header) {
+      grid-template-columns:
+        max-content
+        minmax(0, 1fr)
+        auto;
+    }
+  }
+
+  @media not all and (min-width: 50rem) {
+    :global(.header .right-group) {
+      display: flex !important;
+      gap: 0;
+      margin-inline-end: calc(0rem - var(--sl-nav-pad-x));
+    }
+
+    :global(:root[data-has-sidebar] .header .right-group) {
+      display: none !important;
+    }
+
+    :global(.header .title-wrapper) {
+      margin-inline-end: auto;
+    }
+
+    :global(.header > .sl-flex.print\:hidden) {
+      order: 1;
+    }
+
+    :global(:root[data-has-sidebar] .header > .sl-flex.print\:hidden) {
+      margin-inline-end: calc(var(--sl-menu-button-size) + 0.75rem);
+    }
+
+    :global(starlight-menu-button button) {
+      background: var(--csk-navbar-action-background, transparent);
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      color: var(--csk-navbar-action-color, var(--csk-navbar-color, var(--sl-color-gray-2, currentColor)));
+      height: var(--sl-nav-height);
+      inset-inline-end: 0;
+      padding: 0.75rem;
+      top: 0;
+      transition: background-color var(--csk-interaction-duration) ease, color var(--csk-interaction-duration) ease;
+      width: calc(var(--sl-menu-button-size) + 0.75rem);
+    }
+
+    :global(starlight-menu-button button:hover),
+    :global(starlight-menu-button button:focus-visible),
+    :global(starlight-menu-button[aria-expanded='true'] button) {
+      background: var(--csk-navbar-action-hover-background, var(--csk-navbar-hover-background, color-mix(in srgb, currentColor 9%, transparent)));
+      box-shadow: none;
+      color: var(--csk-navbar-action-hover-color, var(--csk-navbar-accent, var(--sl-color-text-accent, currentColor)));
+    }
+
+    :global(starlight-menu-button button:focus-visible) {
+      outline: 2px solid var(--csk-navbar-focus, var(--csk-navbar-accent, currentColor));
+      outline-offset: -2px;
+    }
+
+    :global(.header .social-icons) {
+      align-items: stretch;
+      gap: 0;
+    }
+
+    :global(.header .social-icons csk-navbar-actions),
+    :global(.header .right-group > csk-theme-toggle),
+    :global(.header .right-group > csk-theme-toggle button) {
+      --csk-navbar-action-height: var(--sl-nav-height);
+      height: var(--sl-nav-height);
+    }
+
+    :global(.header .social-icons::after) {
+      display: none;
+    }
+
+    :global(.mobile-preferences .social-icons) {
+      width: 100%;
+    }
+
+    :global(.mobile-preferences csk-navbar-actions) {
+      display: contents;
+      height: auto;
+    }
+
+    :global(.mobile-preferences .csk-navbar-menu-button) {
+      display: none;
+    }
+
+    :global(.mobile-preferences .csk-navbar-actions__panel) {
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      display: flex;
+      inset: auto;
+      max-height: none;
+      overflow: visible;
+      padding: 0;
+      position: static;
+      width: 100%;
+    }
+  }
+</style>

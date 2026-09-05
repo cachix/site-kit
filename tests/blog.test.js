@@ -7,6 +7,8 @@ import {
   latestPost,
   normalizePost,
   readingMinutes,
+  renderRssFeed,
+  sortBlogEntries,
   sortPosts,
 } from "../src/blog/index.js";
 
@@ -42,6 +44,25 @@ test("formats dates in UTC", () => {
   assert.equal(formatPostDate(new Date("2026-08-26T18:00:00Z"), "en"), "Aug 26, 2026");
 });
 
+test("renders escaped RSS feeds", () => {
+  const xml = renderRssFeed({
+    title: "Site & Kit",
+    description: "Shared <features>",
+    site: "https://example.com/",
+    items: [{
+      title: "Post & title",
+      description: "Body <text>",
+      date: "2026-09-05",
+      link: "/blog/post/",
+    }],
+  });
+
+  assert.match(xml, /<title>Site &amp; Kit<\/title>/);
+  assert.match(xml, /<description>Shared &lt;features&gt;<\/description>/);
+  assert.match(xml, /<link>https:\/\/example\.com\/blog\/post\/<\/link>/);
+  assert.match(xml, /<pubDate>Sat, 05 Sep 2026 00:00:00 GMT<\/pubDate>/);
+});
+
 test("selects the newest published Starlight blog entry", () => {
   const entries = [
     { id: "guide", data: { date: new Date("2026-08-30"), draft: false } },
@@ -56,6 +77,10 @@ test("selects the newest published Starlight blog entry", () => {
     "blog/older",
     "blog/newer",
   ]);
+  assert.deepEqual(
+    sortBlogEntries(entries, { prefix: "", includeDrafts: true }).map((entry) => entry.id),
+    ["guide", "blog/draft", "blog/newer", "blog/older"],
+  );
 });
 
 test("validates dates and reading speed", () => {

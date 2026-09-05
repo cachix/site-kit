@@ -1,0 +1,130 @@
+---
+import './styles.css';
+import { navbarIcons } from './navbar-actions.js';
+import ThemeToggle from './ThemeToggle.astro';
+
+interface VersionLink {
+  label: string;
+  href: string;
+  ariaLabel?: string;
+}
+
+interface DocsLink {
+  label: string;
+  href: string;
+  current?: boolean;
+}
+
+interface Props {
+  repositoryHref?: string;
+  repositoryLabel?: string;
+  repositoryText?: string;
+  metadataEndpoint?: string | false;
+  version?: boolean | VersionLink;
+  discordHref?: string | false;
+  rss?: boolean | DocsLink;
+  blog?: DocsLink;
+  docs?: DocsLink;
+  menuLabel?: string;
+  theme?: boolean;
+  themeLabel?: string;
+}
+
+const {
+  repositoryHref,
+  repositoryLabel = 'GitHub stars',
+  repositoryText,
+  metadataEndpoint = '/api/github',
+  version = true,
+  discordHref = false,
+  rss = true,
+  blog,
+  docs,
+  menuLabel = 'Site navigation',
+  theme = false,
+  themeLabel = 'Toggle theme',
+} = Astro.props;
+const dynamicVersion = version === true && Boolean(repositoryHref && metadataEndpoint);
+const staticVersion = typeof version === 'object' ? version : undefined;
+const releaseBase = repositoryHref ? `${repositoryHref.replace(/\/$/, '')}/releases/tag/` : undefined;
+const resolvedRss = !blog || rss === false
+  ? undefined
+  : typeof rss === 'object'
+    ? rss
+    : { label: 'RSS', href: `${blog.href.replace(/\/?$/, '/')}rss.xml` };
+---
+
+<csk-navbar-actions
+  data-metadata-endpoint={metadataEndpoint || undefined}
+  data-release-base={releaseBase}
+>
+  <button
+    class="csk-navbar-menu-button"
+    type="button"
+    aria-label={menuLabel}
+    aria-expanded="false"
+    data-csk-navbar-menu-button
+  >
+    <span class="csk-navbar-menu-icon" aria-hidden="true"></span>
+  </button>
+  <div class="csk-navbar-actions__panel" data-csk-navbar-menu-panel>
+    {
+      dynamicVersion && (
+        <a class="csk-navbar-link csk-navbar-version" data-csk-release hidden></a>
+      )
+    }
+    {
+      staticVersion && (
+        <a
+          class="csk-navbar-link csk-navbar-version"
+          href={staticVersion.href}
+          aria-label={staticVersion.ariaLabel ?? staticVersion.label}
+        >
+          {staticVersion.label}
+        </a>
+      )
+    }
+    {
+      repositoryHref && (
+        <a
+          class="csk-navbar-social csk-navbar-repository"
+          href={repositoryHref}
+          aria-label={repositoryLabel}
+          rel="me"
+        >
+          <Fragment set:html={navbarIcons.github} />
+          {repositoryText && <span>{repositoryText}</span>}
+          <span class="csk-navbar-stars" data-csk-stars hidden>
+            <span aria-hidden="true">★</span>
+            <span data-csk-stars-count></span>
+          </span>
+        </a>
+      )
+    }
+    {
+      discordHref && (
+        <a class="csk-navbar-social" href={discordHref} rel="me" aria-label="Discord">
+          <Fragment set:html={navbarIcons.discord} />
+        </a>
+      )
+    }
+    {
+      resolvedRss && (
+        <a class="csk-navbar-social" href={resolvedRss.href} rel="alternate" type="application/rss+xml" aria-label={resolvedRss.label}>
+          <Fragment set:html={navbarIcons.rss} />
+        </a>
+      )
+    }
+    <slot />
+    <slot name="before" />
+    {docs && <a class="csk-navbar-link csk-navbar-docs" href={docs.href} aria-current={docs.current ? 'page' : undefined}>{docs.label}</a>}
+    {blog && <a class="csk-navbar-link csk-navbar-blog" href={blog.href} aria-current={blog.current ? 'page' : undefined}>{blog.label}</a>}
+    <slot name="after" />
+  </div>
+</csk-navbar-actions>
+{theme && <ThemeToggle label={themeLabel} />}
+
+<script>
+  import { defineNavbarActions } from './navbar-actions.js';
+  defineNavbarActions();
+</script>

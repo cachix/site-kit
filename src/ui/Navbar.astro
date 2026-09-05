@@ -1,0 +1,36 @@
+---
+interface Props {
+  ariaLabel?: string;
+  class?: string;
+  fixed?: boolean;
+  sticky?: boolean;
+}
+
+const {
+  ariaLabel = 'Main navigation',
+  class: className,
+  fixed = false,
+  sticky = false,
+} = Astro.props;
+---
+
+<header
+  class:list={[
+    'csk-navbar',
+    className,
+    {
+      'csk-navbar--fixed': fixed,
+      'csk-navbar--sticky': sticky && !fixed,
+    },
+  ]}
+  data-pagefind-ignore
+>
+  <div class="csk-navbar__inner">
+    <div class="csk-navbar__brand"><slot name="brand" /></div>
+    <div class="csk-navbar__search"><slot name="search" /></div>
+    <nav class="csk-navbar__actions" aria-label={ariaLabel}><slot /></nav>
+    <div class="csk-navbar__menu"><slot name="menu" /></div>
+  </div>
+</header>
+{fixed && <div class="csk-navbar__spacer" aria-hidden="true"></div>}
+

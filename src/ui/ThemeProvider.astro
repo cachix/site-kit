@@ -1,0 +1,14 @@
+---
+import { createThemeInitializationScript } from './theme.js';
+
+interface Props {
+  storageKey?: string;
+  lightColor?: string;
+  darkColor?: string;
+}
+
+const { storageKey = 'starlight-theme', lightColor, darkColor } = Astro.props;
+const initialization = createThemeInitializationScript({ storageKey, lightColor, darkColor });
+---
+
+<script is:inline set:html={initialization}></script>

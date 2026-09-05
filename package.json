@@ -5,6 +5,8 @@
   "type": "module",
   "description": "Shared website primitives and integrations for Cachix projects.",
   "license": "Apache-2.0",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cachix/site-kit.git"
@@ -31,6 +33,14 @@
       "import": "./src/ui/index.js"
     },
     "./ui/styles.css": "./src/ui/styles.css",
+    "./ui/navbar-actions": {
+      "types": "./src/ui/navbar-actions.d.ts",
+      "import": "./src/ui/navbar-actions.js"
+    },
+    "./ui/theme": {
+      "types": "./src/ui/theme.d.ts",
+      "import": "./src/ui/theme.js"
+    },
     "./ui/*.astro": {
       "types": "./src/ui/*.astro.d.ts",
       "import": "./src/ui/*.astro"
@@ -39,10 +49,15 @@
       "types": "./src/motion/index.d.ts",
       "import": "./src/motion/index.js"
     },
+    "./astro": {
+      "types": "./src/astro/index.d.ts",
+      "import": "./src/astro/index.js"
+    },
     "./starlight": {
       "types": "./src/starlight/index.d.ts",
       "import": "./src/starlight/index.js"
     },
+    "./starlight/Navbar.astro": "./src/starlight/Navbar.astro",
     "./starlight/blog": {
       "types": "./src/starlight/blog.d.ts",
       "import": "./src/starlight/blog.js"

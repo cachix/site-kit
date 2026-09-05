@@ -2,6 +2,7 @@
 interface Props {
   href?: string;
   variant?: 'primary' | 'secondary' | 'quiet';
+  arrow?: boolean;
   class?: string;
   type?: 'button' | 'submit' | 'reset';
 }
@@ -9,6 +10,7 @@ interface Props {
 const {
   href,
   variant = 'primary',
+  arrow = false,
   class: className,
   type = 'button',
   ...attributes
@@ -18,10 +20,11 @@ const {
 {href ? (
   <a class:list={['csk-button', className]} data-variant={variant} href={href} {...attributes}>
     <slot />
+    {arrow && <span class="csk-button__arrow" aria-hidden="true">→</span>}
   </a>
 ) : (
   <button class:list={['csk-button', className]} data-variant={variant} type={type} {...attributes}>
     <slot />
+    {arrow && <span class="csk-button__arrow" aria-hidden="true">→</span>}
   </button>
 )}
-

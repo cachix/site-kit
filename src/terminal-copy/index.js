@@ -113,6 +113,50 @@ export function extractTerminalCommands(code, language = "bash") {
   return commands.length ? commands.map(({ command }) => command).join("\n") : code;
 }
 
+export function extractTerminalCopyText(target, {
+  lineSelector = "[data-csk-copy-line]",
+  ignoreSelector = "[data-csk-copy-ignore]",
+} = {}) {
+  const lines = [...target.querySelectorAll(lineSelector)];
+  if (!lines.length) return target.textContent ?? "";
+  return lines.map((line) => {
+    const copy = line.cloneNode(true);
+    copy.querySelectorAll(ignoreSelector).forEach((node) => node.remove());
+    return (copy.textContent ?? "").replaceAll("\u00a0", "");
+  }).join("\n");
+}
+
+export function initializeTerminalCopyButtons({
+  root = globalThis.document,
+  navigatorObject = globalThis.navigator,
+  setTimeoutFunction = globalThis.setTimeout,
+} = {}) {
+  if (!root?.querySelectorAll) return;
+  const documentObject = root.ownerDocument ?? root;
+  for (const button of root.querySelectorAll("[data-csk-copy-target]")) {
+    if (button.dataset.cskCopyConnected !== undefined) continue;
+    button.dataset.cskCopyConnected = "";
+    button.addEventListener("click", async () => {
+      const target = documentObject.getElementById(button.dataset.cskCopyTarget ?? "");
+      if (!target || !navigatorObject?.clipboard?.writeText) return;
+      const text = extractTerminalCopyText(target, {
+        lineSelector: button.dataset.cskCopyLines,
+        ignoreSelector: button.dataset.cskCopyIgnore,
+      });
+      await navigatorObject.clipboard.writeText(text);
+      const idleLabel = button.textContent;
+      const successLabel = button.dataset.cskCopySuccess;
+      if (!successLabel) return;
+      button.textContent = successLabel;
+      button.dataset.cskCopyState = "copied";
+      setTimeoutFunction(() => {
+        button.textContent = idleLabel;
+        delete button.dataset.cskCopyState;
+      }, Number(button.dataset.cskCopyDuration) || 1500);
+    });
+  }
+}
+
 export function terminalCopyPlugin() {
   return {
     name: "Cachix terminal copy",
@@ -176,4 +220,3 @@ function cloneNode(node) {
     children: node.children?.map(cloneNode) ?? [],
   };
 }
-

@@ -16,6 +16,11 @@ export default defineConfig({
         starlightBlog(siteBlogOptions()),
         starlightLlmsTxt(siteLlmsOptions('A fixture proving the shared Cachix Starlight integrations.')),
       ],
+      social: [
+        { icon: 'github', label: 'GitHub', href: 'https://github.com/cachix/site-kit' },
+        { icon: 'discord', label: 'Discord', href: 'https://discord.gg/naMgvexb6q' },
+      ],
+      sidebar: [{ label: 'Docs', items: [{ label: 'Components', link: '/components/' }] }],
     }),
   ],
 });

@@ -9,6 +9,7 @@ export function siteBlogOptions(options = {}) {
   return {
     title: "Blog",
     authors: defaultAuthors,
+    navigation: "none",
     ...options,
   };
 }
