@@ -96,7 +96,7 @@
     "@astrojs/starlight": ">=0.34.0 <1.0.0",
     "astro": ">=5.0.0 <8.0.0",
     "starlight-blog": ">=0.25.0 <1.0.0",
-    "starlight-llms-txt": ">=0.7.0 <1.0.0"
+    "starlight-llm-actions": ">=0.13.0 <1.0.0"
   },
   "peerDependenciesMeta": {
     "@astrojs/starlight": {
@@ -108,16 +108,24 @@
     "starlight-blog": {
       "optional": true
     },
-    "starlight-llms-txt": {
+    "starlight-llm-actions": {
       "optional": true
     }
   },
   "devDependencies": {
     "@astrojs/check": "0.9.9",
+    "@astrojs/mdx": "7.0.8",
     "@astrojs/starlight": "0.41.4",
     "astro": "7.1.6",
+    "hast-util-select": "6.0.4",
+    "rehype-parse": "9.0.1",
+    "rehype-remark": "10.0.1",
+    "remark-gfm": "4.0.1",
+    "remark-stringify": "11.0.0",
     "starlight-blog": "0.29.0",
-    "starlight-llms-txt": "0.11.0",
-    "typescript": "6.0.3"
+    "starlight-llm-actions": "0.13.0",
+    "typescript": "6.0.3",
+    "unified": "11.0.5",
+    "unist-util-remove": "4.0.0"
   }
 }
