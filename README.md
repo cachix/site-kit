@@ -53,7 +53,7 @@ The flattened rendering needs these packages installed in the consumer alongside
 npm install @astrojs/mdx unified rehype-parse rehype-remark remark-gfm remark-stringify hast-util-select unist-util-remove
 ```
 
-Agents such as Claude Code and Cursor ask for Markdown through the `Accept: text/markdown` header on the page URL itself. A static build cannot answer that at request time, so add one Cloudflare Redirect Rule per zone. It runs at the edge on every plan and needs no worker. The directory form of the Markdown URL exists so the target is a plain `concat` rather than a regex.
+Agents such as Claude Code and Cursor ask for Markdown through the `Accept: text/markdown` header on the page URL itself. A static build cannot answer that at request time. `createMarkdownMiddleware()` from the Cloudflare module answers it from a Pages Function, see [Cloudflare](#cloudflare). Without a function, one Cloudflare Redirect Rule per zone does the same at the edge on every plan. The directory form of the Markdown URL exists so both stay a plain path append rather than a regex.
 
 | Field | Value |
 | --- | --- |
@@ -62,7 +62,7 @@ Agents such as Claude Code and Cursor ask for Markdown through the `Accept: text
 | Expression | `concat(http.request.uri.path, "index.md")` |
 | Status | 302 |
 
-Pages served outside the docs collection, such as a custom Astro page, have no Markdown sibling. Exclude them in the rule with `and not starts_with(http.request.uri.path, "/components/")`, or let them answer 404 to Markdown requests.
+Pages served outside the docs collection, such as a custom Astro page, have no Markdown sibling. The middleware falls back to HTML for them. A redirect rule needs `and not starts_with(http.request.uri.path, "/components/")`, or those pages answer 404 to Markdown requests.
 
 ## UI
 
@@ -114,12 +114,16 @@ The lifecycle combines viewport visibility, page visibility, and reduced-motion 
 ## Cloudflare
 
 ```js
-import { createBasicAuthMiddleware } from '@cachix/site-kit/cloudflare';
+// functions/_middleware.js
+import { createBasicAuthMiddleware, createMarkdownMiddleware } from '@cachix/site-kit/cloudflare';
 
-export const onRequest = createBasicAuthMiddleware({
-  realm: 'project preview',
-});
+export const onRequest = [
+  createBasicAuthMiddleware({ realm: 'project preview' }),
+  createMarkdownMiddleware(),
+];
 ```
+
+`createMarkdownMiddleware()` serves the prebuilt `index.md` beside a page when the request prefers `text/markdown` over `text/html`, with `Content-Location` and `Vary: Accept` set. Browsers never send that type, so they keep getting HTML, and pages without a Markdown sibling fall through to HTML as well. Pass `{ redirect: true }` to answer with a 302 to the Markdown file instead of its body. Add a `_routes.json` that excludes `/_astro/*` and other asset paths so the function only runs for pages.
 
 `createGitHubMetadataHandler()` provides the shared edge-cached stars and latest-release endpoint.
 

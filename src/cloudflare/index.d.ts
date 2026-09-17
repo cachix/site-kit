@@ -5,7 +5,9 @@ export interface BasicAuthOptions {
 }
 
 export interface CloudflareContext {
-  env?: Record<string, string | undefined>;
+  env?: Record<string, unknown> & {
+    ASSETS?: { fetch(request: Request): Promise<Response> };
+  };
   request: Request;
   next(): Response | Promise<Response>;
 }
@@ -28,3 +30,14 @@ export function createGitHubMetadataHandler(options: GitHubMetadataOptions): (
 
 export function formatGitHubCount(value: number): string | undefined;
 
+
+export interface MarkdownMiddlewareOptions {
+  fileName?: string;
+  redirect?: boolean;
+}
+
+export function createMarkdownMiddleware(options?: MarkdownMiddlewareOptions): (
+  context: CloudflareContext,
+) => Promise<Response>;
+
+export function prefersMarkdown(accept: string | null | undefined): boolean;

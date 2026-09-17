@@ -3,8 +3,10 @@ import test from "node:test";
 
 import {
   createBasicAuthMiddleware,
+  createMarkdownMiddleware,
   createGitHubMetadataHandler,
   formatGitHubCount,
+  prefersMarkdown,
 } from "../src/cloudflare/index.js";
 
 test("protects Cloudflare previews", async () => {
@@ -131,4 +133,73 @@ test("formats GitHub counts consistently", () => {
   assert.equal(formatGitHubCount(1200), "1.2k");
   assert.equal(formatGitHubCount(12_400), "12k");
   assert.equal(formatGitHubCount(-1), undefined);
+});
+
+test("detects agents that prefer markdown", () => {
+  assert.equal(prefersMarkdown("text/markdown, text/html, */*"), true);
+  assert.equal(prefersMarkdown("text/markdown, text/plain;q=0.9, */*;q=0.8"), true);
+  assert.equal(prefersMarkdown("text/markdown;q=1.0"), true);
+  assert.equal(prefersMarkdown("text/html, text/markdown;q=0.5"), false);
+  assert.equal(prefersMarkdown("text/markdown;q=0, text/html"), false);
+  assert.equal(prefersMarkdown("text/html,application/xhtml+xml,*/*;q=0.8"), false);
+  assert.equal(prefersMarkdown("*/*"), false);
+  assert.equal(prefersMarkdown(null), false);
+});
+
+test("serves prebuilt markdown to agents from Pages assets", async () => {
+  const middleware = createMarkdownMiddleware();
+  const html = new Response("<html>");
+  const fetched = [];
+  const context = (accept, url = "https://docs.invalid/guides/example/", method = "GET") => ({
+    env: {
+      ASSETS: {
+        fetch: async (request) => {
+          fetched.push(request.url);
+          return request.url.endsWith("/guides/example/index.md")
+            ? new Response("# Example", { headers: { "Content-Type": "text/plain", ETag: '"1"' } })
+            : new Response("missing", { status: 404 });
+        },
+      },
+    },
+    request: new Request(url, { method, headers: accept ? { Accept: accept } : {} }),
+    next: () => html,
+  });
+
+  const markdown = await middleware(context("text/markdown, text/html, */*"));
+  assert.equal(markdown.status, 200);
+  assert.equal(await markdown.text(), "# Example");
+  assert.equal(markdown.headers.get("Content-Type"), "text/markdown; charset=utf-8");
+  assert.equal(markdown.headers.get("Content-Location"), "/guides/example/index.md");
+  assert.equal(markdown.headers.get("Vary"), "Accept");
+  assert.equal(markdown.headers.get("ETag"), '"1"');
+  assert.deepEqual(fetched, ["https://docs.invalid/guides/example/index.md"]);
+
+  assert.equal(await middleware(context("text/html,*/*;q=0.8")), html);
+  assert.equal(await middleware(context("text/markdown", "https://docs.invalid/missing/")), html);
+  assert.equal(await middleware(context("text/markdown", "https://docs.invalid/guides/example/index.md")), html);
+  assert.equal(await middleware(context("text/markdown", "https://docs.invalid/guides/example/", "POST")), html);
+  assert.equal(await middleware({ ...context("text/markdown"), env: {} }), html);
+});
+
+test("passes conditional markdown requests through unchanged", async () => {
+  const middleware = createMarkdownMiddleware();
+  const response = await middleware({
+    env: { ASSETS: { fetch: async () => new Response(null, { status: 304, headers: { ETag: '"1"' } }) } },
+    request: new Request("https://docs.invalid/", { headers: { Accept: "text/markdown" } }),
+    next: () => new Response("<html>"),
+  });
+  assert.equal(response.status, 304);
+  assert.equal(response.headers.get("Vary"), "Accept");
+});
+
+test("can redirect agents to the markdown file instead", async () => {
+  const middleware = createMarkdownMiddleware({ redirect: true, fileName: "page.md" });
+  const response = await middleware({
+    request: new Request("https://docs.invalid/guides/example/", { headers: { Accept: "text/markdown" } }),
+    next: () => new Response("<html>"),
+  });
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get("Location"), "/guides/example/page.md");
+  assert.equal(response.headers.get("Vary"), "Accept");
+  assert.throws(() => createMarkdownMiddleware({ fileName: "nested/index.md" }), TypeError);
 });

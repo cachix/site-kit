@@ -133,3 +133,58 @@ async function secureEqual(actual, expected) {
 function escapeRealm(value) {
   return String(value).replace(/["\\]/g, "");
 }
+
+export function createMarkdownMiddleware({ fileName = "index.md", redirect = false } = {}) {
+  if (typeof fileName !== "string" || fileName === "" || fileName.includes("/")) {
+    throw new TypeError("fileName must be a file name without path separators");
+  }
+  return async function onRequest(context) {
+    const { request } = context;
+    if (request.method !== "GET" && request.method !== "HEAD") return context.next();
+    if (!prefersMarkdown(request.headers.get("Accept"))) return context.next();
+    const url = new URL(request.url);
+    if (!url.pathname.endsWith("/")) return context.next();
+    const markdownPath = `${url.pathname}${fileName}`;
+
+    if (redirect) {
+      return new Response(null, {
+        status: 302,
+        headers: { Location: markdownPath, Vary: "Accept" },
+      });
+    }
+
+    const assets = context.env?.ASSETS;
+    if (typeof assets?.fetch !== "function") return context.next();
+    const asset = await assets.fetch(
+      new Request(new URL(markdownPath, url), { method: request.method, headers: request.headers }),
+    );
+    if (asset.status !== 200 && asset.status !== 304) return context.next();
+
+    const headers = new Headers(asset.headers);
+    headers.set("Content-Type", "text/markdown; charset=utf-8");
+    headers.set("Content-Location", markdownPath);
+    headers.append("Vary", "Accept");
+    return new Response(asset.status === 304 ? null : asset.body, {
+      status: asset.status,
+      headers,
+    });
+  };
+}
+
+export function prefersMarkdown(accept) {
+  if (typeof accept !== "string") return false;
+  let markdown = 0;
+  let html = 0;
+  for (const part of accept.split(",")) {
+    const [type, ...parameters] = part.split(";");
+    const media = type.trim().toLowerCase();
+    const quality = parameters
+      .map((parameter) => parameter.trim().toLowerCase())
+      .find((parameter) => parameter.startsWith("q="));
+    const weight = quality ? Number.parseFloat(quality.slice(2)) : 1;
+    if (!Number.isFinite(weight)) continue;
+    if (media === "text/markdown") markdown = Math.max(markdown, weight);
+    else if (media === "text/html") html = Math.max(html, weight);
+  }
+  return markdown > 0 && markdown >= html;
+}
