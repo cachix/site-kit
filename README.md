@@ -21,22 +21,39 @@ The HTTPS tarball works without GitHub SSH credentials and does not run a packag
 ```js
 import starlight from '@astrojs/starlight';
 import starlightBlog from 'starlight-blog';
-import starlightLlmsTxt from 'starlight-llms-txt';
+import starlightLlmActions from 'starlight-llm-actions';
 import { siteKitStarlight } from '@cachix/site-kit/starlight';
 import { siteBlogOptions } from '@cachix/site-kit/starlight/blog';
-import { siteLlmsOptions } from '@cachix/site-kit/starlight/llms';
+import { siteLlmActionsOptions } from '@cachix/site-kit/starlight/llms';
 
 starlight({
   title: 'Project',
   plugins: [
     siteKitStarlight(),
     starlightBlog(siteBlogOptions()),
-    starlightLlmsTxt(siteLlmsOptions('Project-specific description.')),
+    starlightLlmActions(siteLlmActionsOptions('Project-specific description.')),
   ],
 });
 ```
 
 `siteKitStarlight()` installs the shared UI stylesheet, terminal command copy behavior, its stylesheet, and the landing-page Hero override. Explicit consumer overrides are preserved. Astro content collection declarations stay in each consumer so their framework version can infer the schema without crossing a package type boundary.
+
+### Markdown for agents
+
+`siteLlmActionsOptions(description)` configures [starlight-llm-actions](https://github.com/holdenhewett/starlight-llm-actions) so coding agents read plaintext instead of the rendered HTML shell:
+
+- Every docs page is prerendered as Markdown next to its HTML page, for example `/guides/example/` at `/guides/example.md`. MDX and Starlight components are flattened to plain Markdown.
+- Every HTML page carries `<link rel="alternate" type="text/markdown">`, which agents such as Codex follow.
+- `/llms.txt` indexes the site and `/llms-full.txt` bundles every page. The description is required because the index links need an absolute `site` URL and a summary.
+- Each page shows a page actions menu for copying the Markdown or opening it in a chat assistant. Disable it per page with `llmActions: false` in frontmatter.
+
+The flattened rendering needs these packages installed in the consumer alongside `starlight-llm-actions`:
+
+```sh
+npm install @astrojs/mdx unified rehype-parse rehype-remark remark-gfm remark-stringify hast-util-select unist-util-remove
+```
+
+Agents such as Claude Code and Cursor ask for Markdown through the `Accept: text/markdown` header on the page URL itself. A static build cannot answer that at request time, so enable Cloudflare's Markdown for Agents on the zone, or serve the prerendered `.md` file from a Pages function when the header is present.
 
 ## UI
 
