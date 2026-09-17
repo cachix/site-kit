@@ -42,7 +42,7 @@ starlight({
 
 `siteLlmActionsOptions(description)` configures [starlight-llm-actions](https://github.com/holdenhewett/starlight-llm-actions) so coding agents read plaintext instead of the rendered HTML shell:
 
-- Every docs page is prerendered as Markdown next to its HTML page, for example `/guides/example/` at `/guides/example.md`. MDX and Starlight components are flattened to plain Markdown.
+- Every docs page is prerendered as Markdown next to its HTML page, for example `/guides/example/` at `/guides/example/index.md` and `/` at `/index.md`. MDX and Starlight components are flattened to plain Markdown.
 - Every HTML page carries `<link rel="alternate" type="text/markdown">`, which agents such as Codex follow.
 - `/llms.txt` indexes the site and `/llms-full.txt` bundles every page. The description is required because the index links need an absolute `site` URL and a summary.
 - Each page shows a page actions menu for copying the Markdown or opening it in a chat assistant. Disable it per page with `llmActions: false` in frontmatter.
@@ -53,7 +53,16 @@ The flattened rendering needs these packages installed in the consumer alongside
 npm install @astrojs/mdx unified rehype-parse rehype-remark remark-gfm remark-stringify hast-util-select unist-util-remove
 ```
 
-Agents such as Claude Code and Cursor ask for Markdown through the `Accept: text/markdown` header on the page URL itself. A static build cannot answer that at request time, so enable Cloudflare's Markdown for Agents on the zone, or serve the prerendered `.md` file from a Pages function when the header is present.
+Agents such as Claude Code and Cursor ask for Markdown through the `Accept: text/markdown` header on the page URL itself. A static build cannot answer that at request time, so add one Cloudflare Redirect Rule per zone. It runs at the edge on every plan and needs no worker. The directory form of the Markdown URL exists so the target is a plain `concat` rather than a regex.
+
+| Field | Value |
+| --- | --- |
+| When | `http.request.headers["accept"][0] contains "text/markdown" and ends_with(http.request.uri.path, "/")` |
+| Type | Dynamic |
+| Expression | `concat(http.request.uri.path, "index.md")` |
+| Status | 302 |
+
+Pages served outside the docs collection, such as a custom Astro page, have no Markdown sibling. Exclude them in the rule with `and not starts_with(http.request.uri.path, "/components/")`, or let them answer 404 to Markdown requests.
 
 ## UI
 

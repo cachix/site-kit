@@ -1,4 +1,5 @@
 const DEFAULT_LLM_ACTIONS = Object.freeze({
+  markdownUrl: "/{slug}/index.md",
   renderMarkdown: "simple",
   linkAlternate: true,
 });

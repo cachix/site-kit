@@ -7,7 +7,7 @@ const html = await readFile(new URL("index.html", root), "utf8");
 const blog = await readFile(new URL("blog/prototype/index.html", root), "utf8");
 const components = await readFile(new URL("components/index.html", root), "utf8");
 const indexMarkdown = await readFile(new URL("index.md", root), "utf8");
-const blogMarkdown = await readFile(new URL("blog/prototype.md", root), "utf8");
+const blogMarkdown = await readFile(new URL("blog/prototype/index.md", root), "utf8");
 const llmsTxt = await readFile(new URL("llms.txt", root), "utf8");
 const llmsFull = await readFile(new URL("llms-full.txt", root), "utf8");
 const assetDirectory = new URL("_astro/", root);
@@ -118,8 +118,8 @@ assert.doesNotMatch(css, /csk-navbar-pill/);
 assert.doesNotMatch(css, /:where\(\)\s*\{/);
 
 assert.match(html, /<link rel="alternate" type="text\/markdown" href="\/index.md"\/>/);
-assert.match(blog, /<link rel="alternate" type="text\/markdown" href="\/blog\/prototype.md"\/>/);
-assert.match(blog, /data-markdown-href="\/blog\/prototype.md"/);
+assert.match(blog, /<link rel="alternate" type="text\/markdown" href="\/blog\/prototype\/index.md"\/>/);
+assert.match(blog, /data-markdown-href="\/blog\/prototype\/index.md"/);
 assert.match(indexMarkdown, /^# Site Kit\n/);
 assert.match(indexMarkdown, /```console\n\$ cachix-site-check-links dist/);
 assert.doesNotMatch(indexMarkdown, /<(?:div|span|button)/);
@@ -127,7 +127,7 @@ assert.match(blogMarkdown, /^# Site Kit prototype\n/);
 assert.match(llmsTxt, /^# Site Kit\n/);
 assert.match(llmsTxt, /> A fixture proving the shared Cachix Starlight integrations\./);
 assert.match(llmsTxt, /\(https:\/\/site-kit\.invalid\/llms-full\.txt\)/);
-assert.match(llmsTxt, /\(https:\/\/site-kit\.invalid\/blog\/prototype\.md\)/);
+assert.match(llmsTxt, /\(https:\/\/site-kit\.invalid\/blog\/prototype\/index\.md\)/);
 assert.match(llmsFull, /# Site Kit prototype/);
 
 console.log("Verified shared Hero, terminal copy, agent markdown, and UI components in Astro output.");

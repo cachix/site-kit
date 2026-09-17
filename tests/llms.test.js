@@ -5,6 +5,7 @@ import { siteLlmActionsOptions } from "../src/starlight/llms.js";
 
 test("serves agent markdown with alternate links and llms.txt by default", () => {
   assert.deepEqual(siteLlmActionsOptions("Shared docs."), {
+    markdownUrl: "/{slug}/index.md",
     renderMarkdown: "simple",
     linkAlternate: true,
     llmsTxt: { description: "Shared docs." },
