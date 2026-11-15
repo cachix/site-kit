@@ -147,6 +147,7 @@ export function initializeViewportReveals({
 } = {}) {
   const scope = root ?? documentObject;
   const selector = ".csk-reveal";
+  const visibleClass = "csk-reveal--visible";
 
   if (automatic && scope?.querySelector) {
     const hero = scope.querySelector(".csk-landing-hero");
@@ -156,12 +157,16 @@ export function initializeViewportReveals({
         if (sibling !== hero && sibling.matches?.("section")) candidates.push(sibling);
       }
 
-      for (const element of candidates) {
-        if (element.matches?.(".csk-latest-post-region")
+      const viewportHeight = windowObject?.innerHeight ?? 0;
+      const reveals = candidates
+        .filter((element) => !(element.matches?.(".csk-latest-post-region")
           || element.getAttribute?.("aria-hidden") === "true"
           || element.matches?.(selector)
-          || element.querySelector?.(selector)) continue;
+          || element.querySelector?.(selector)))
+        .map((element) => [element, (element.getBoundingClientRect?.().top ?? 0) < viewportHeight]);
+      for (const [element, onScreen] of reveals) {
         element.classList?.add("csk-reveal");
+        if (onScreen) element.classList?.add(visibleClass);
       }
     }
   }
@@ -169,7 +174,7 @@ export function initializeViewportReveals({
   return revealOnIntersection({
     root: scope,
     selector,
-    visibleClass: "csk-reveal--visible",
+    visibleClass,
     threshold,
     rootMargin,
     window: windowObject,

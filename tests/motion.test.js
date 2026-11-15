@@ -188,3 +188,39 @@ test("marks landing content and sections for shared viewport reveals", () => {
   assert.equal(latestPost.classList.has("csk-reveal"), false);
   assert.deepEqual(observed, [heroContent, section]);
 });
+
+test("keeps landing content that is already on screen visible", () => {
+  const createElement = (top) => ({
+    classList: new Set(),
+    getAttribute: () => null,
+    getBoundingClientRect: () => ({ top }),
+    matches: (selector) => selector === "section",
+    querySelector: () => null,
+  });
+  const heroContent = createElement(120);
+  const scrolledPast = createElement(-400);
+  const belowFold = createElement(900);
+  const hero = { children: [heroContent], parentElement: { children: [] } };
+  hero.parentElement.children = [scrolledPast, hero, belowFold];
+  const root = {
+    querySelector: () => hero,
+    querySelectorAll: () => [heroContent, scrolledPast, belowFold],
+  };
+  const window = {
+    innerHeight: 800,
+    matchMedia: () => ({ matches: false }),
+    IntersectionObserver: class {
+      observe() {}
+      disconnect() {}
+    },
+  };
+
+  initializeViewportReveals({ root, window, document: root });
+
+  for (const element of [heroContent, scrolledPast, belowFold]) {
+    assert.equal(element.classList.has("csk-reveal"), true);
+  }
+  assert.equal(heroContent.classList.has("csk-reveal--visible"), true);
+  assert.equal(scrolledPast.classList.has("csk-reveal--visible"), true);
+  assert.equal(belowFold.classList.has("csk-reveal--visible"), false);
+});
