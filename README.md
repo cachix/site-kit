@@ -40,13 +40,7 @@ starlight({
 
 ### Client-side navigation
 
-`siteKitStarlight()` also turns on Astro's client router through [astro-vtbot](https://github.com/martrapp/astro-vtbot), so following a link swaps the page content instead of reloading the page. Install it in the consumer:
-
-```sh
-npm install astro-vtbot
-```
-
-The shared `Head` wraps the consumer's own `Head` override, so a site that already overrides `Head` keeps its additions. View transition animations are off, and `.js` assets are never inlined so scripts that move between pages run once. A module script runs once per visit, not once per page, so page scripts that touch the DOM must set up on `astro:page-load` and clean up on `astro:before-swap`. Pass `clientRouter: false` to keep full page loads.
+`siteKitStarlight()` also turns on Astro's client router through [astro-vtbot](https://github.com/martrapp/astro-vtbot), so following a link swaps the page content instead of reloading the page. View transition animations are off, and `.js` assets are never inlined so scripts that move between pages run once. A module script runs once per visit, not once per page, so page scripts that touch the DOM must set up on `astro:page-load` and clean up on `astro:before-swap`. A site with its own `Head` override renders `@cachix/site-kit/starlight/Head.astro` in it to keep the router. Pass `clientRouter: false` to keep full page loads.
 
 ### Markdown for agents
 
@@ -145,7 +139,7 @@ cachix-site-check-links dist https://project.example
 
 The checker validates generated internal routes and fragments without requiring a framework.
 
-The package has no install scripts or runtime dependencies.
+The package has no install scripts. Its only runtime dependency is astro-vtbot, which the Starlight integration uses for client-side navigation.
 
 ## Development
 

@@ -61,38 +61,7 @@ test("preserves explicit consumer overrides", () => {
   assert.equal(update.expressiveCode, undefined);
 });
 
-test("routes pages on the client around the consumer Head", () => {
-  let update;
-  let integration;
-  siteKitStarlight().hooks["config:setup"]({
-    astroConfig: { root: new URL("file:///project/") },
-    config: { components: { Head: "./src/Head.astro" } },
-    updateConfig: (value) => {
-      update = value;
-    },
-    addIntegration(value) {
-      integration = value;
-    },
-  });
-
-  assert.match(update.components.Head, /starlight\/Head\.astro$/);
-  let astroUpdate;
-  integration.hooks["astro:config:setup"]({
-    config: { vite: { build: { assetsInlineLimit: 100 } } },
-    updateConfig(value) {
-      astroUpdate = value;
-    },
-  });
-  const { build, plugins: [plugin] } = astroUpdate.vite;
-  assert.equal(build.assetsInlineLimit("chunk.js", Buffer.alloc(1)), false);
-  assert.equal(build.assetsInlineLimit("icon.svg", Buffer.alloc(99)), true);
-  assert.equal(build.assetsInlineLimit("icon.svg", Buffer.alloc(100)), false);
-  const id = plugin.resolveId("virtual:cachix-site-kit/starlight-head");
-  assert.equal(plugin.load(id), 'export { default } from "/project/src/Head.astro";');
-  assert.equal(plugin.resolveId("./other.js"), undefined);
-});
-
-test("wraps the default Starlight Head", () => {
+test("keeps scripts out of the HTML for the client router", () => {
   let integration;
   siteKitStarlight().hooks["config:setup"]({
     config: {},
@@ -101,19 +70,26 @@ test("wraps the default Starlight Head", () => {
       integration = value;
     },
   });
-  let astroUpdate;
+  let update;
   integration.hooks["astro:config:setup"]({
-    config: {},
     updateConfig(value) {
-      astroUpdate = value;
+      update = value;
     },
   });
-  const { build, plugins: [plugin] } = astroUpdate.vite;
-  assert.equal(build.assetsInlineLimit("icon.svg", Buffer.alloc(1)), undefined);
-  assert.equal(
-    plugin.load(plugin.resolveId("virtual:cachix-site-kit/starlight-head")),
-    'export { default } from "@astrojs/starlight/components/Head.astro";',
-  );
+  const { assetsInlineLimit } = update.vite.build;
+  assert.equal(assetsInlineLimit("chunk.js"), false);
+  assert.equal(assetsInlineLimit("icon.svg"), undefined);
+});
+
+test("leaves a consumer Head override in place", () => {
+  let update;
+  siteKitStarlight().hooks["config:setup"]({
+    config: { components: { Head: "./src/Head.astro" } },
+    updateConfig: (value) => {
+      update = value;
+    },
+  });
+  assert.equal(update.components.Head, "./src/Head.astro");
 });
 
 test("can disable every optional feature", () => {
