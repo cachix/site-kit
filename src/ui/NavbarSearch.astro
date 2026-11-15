@@ -59,9 +59,25 @@ const developmentWarning = import.meta.env.DEV
 
     class CachixNavbarSearch extends HTMLElement {
       connectedCallback() {
-        if (this.dataset.ready !== undefined) return;
-        this.dataset.ready = '';
+        if (this.dataset.ready === undefined) {
+          this.dataset.ready = '';
+          this.initialize();
+        }
+        if (!this.toggleSearch) return;
 
+        this.shortcut = new AbortController();
+        window.addEventListener('keydown', (event) => {
+          if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'k') return;
+          event.preventDefault();
+          this.toggleSearch();
+        }, { signal: this.shortcut.signal });
+      }
+
+      disconnectedCallback() {
+        this.shortcut?.abort();
+      }
+
+      initialize() {
         const openButton = this.querySelector('[data-open-search]');
         const platformKey = this.querySelector('[data-platform-key]');
         const dialog = this.querySelector('dialog');
@@ -182,11 +198,7 @@ const developmentWarning = import.meta.env.DEV
           const offset = event.key === 'ArrowDown' ? 1 : -1;
           links[(current + offset + links.length) % links.length].focus();
         });
-        window.addEventListener('keydown', (event) => {
-          if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'k') return;
-          event.preventDefault();
-          dialog.open ? closeSearch() : openSearch();
-        });
+        this.toggleSearch = () => (dialog.open ? closeSearch() : openSearch());
       }
     }
 
