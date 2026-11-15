@@ -18,6 +18,8 @@ test("injects shared viewport reveals on every page", () => {
   assert.match(scripts[1][1], /initializeViewportReveals/);
   assert.match(scripts[1][1], /astro:after-swap/);
   assert.doesNotMatch(scripts[1][1], /astro:page-load/);
+  assert.match(scripts[1][1], /back_forward/);
+  assert.match(scripts[1][1], /"traverse"/);
 });
 
 test("injects an opt-in shared RSS route", () => {

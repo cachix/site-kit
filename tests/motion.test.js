@@ -150,77 +150,99 @@ test("reveals immediately when reduced motion is requested", () => {
   assert.equal(element.classList.has("visible"), true);
 });
 
-test("marks landing content and sections for shared viewport reveals", () => {
-  const createElement = ({ matches = () => false, querySelector = () => null } = {}) => ({
+function landingPage() {
+  const createElement = ({ matches = () => false } = {}) => ({
     classList: new Set(),
     getAttribute: () => null,
     matches,
-    querySelector,
-  });
-  const heroContent = createElement();
-  const latestPost = createElement({ matches: (selector) => selector === ".csk-latest-post-region" });
-  const section = createElement({ matches: (selector) => selector === "section" });
-  const hero = createElement();
-  hero.children = [latestPost, heroContent];
-  hero.parentElement = { children: [hero, section] };
-  const root = {
-    querySelector: () => hero,
-    querySelectorAll: () => [heroContent, section],
-  };
-  let observed;
-  const window = {
-    matchMedia: () => ({ matches: false }),
-    IntersectionObserver: class {
-      constructor() {
-        observed = [];
-      }
-      observe(element) {
-        observed.push(element);
-      }
-      disconnect() {}
-    },
-  };
-
-  initializeViewportReveals({ root, window, document: root });
-
-  assert.equal(heroContent.classList.has("csk-reveal"), true);
-  assert.equal(section.classList.has("csk-reveal"), true);
-  assert.equal(latestPost.classList.has("csk-reveal"), false);
-  assert.deepEqual(observed, [heroContent, section]);
-});
-
-test("keeps landing content that is already on screen visible", () => {
-  const createElement = (top) => ({
-    classList: new Set(),
-    getAttribute: () => null,
-    getBoundingClientRect: () => ({ top }),
-    matches: (selector) => selector === "section",
     querySelector: () => null,
   });
-  const heroContent = createElement(120);
-  const scrolledPast = createElement(-400);
-  const belowFold = createElement(900);
-  const hero = { children: [heroContent], parentElement: { children: [] } };
-  hero.parentElement.children = [scrolledPast, hero, belowFold];
+  const section = () => createElement({ matches: (selector) => selector === "section" });
+  const heroContent = createElement();
+  const latestPost = createElement({ matches: (selector) => selector === ".csk-latest-post-region" });
+  const scrolledPast = section();
+  const onScreen = section();
+  const belowFold = section();
+  const hero = createElement();
+  hero.children = [latestPost, heroContent];
+  hero.parentElement = { children: [scrolledPast, hero, onScreen, belowFold] };
   const root = {
-    querySelector: () => hero,
-    querySelectorAll: () => [heroContent, scrolledPast, belowFold],
+    querySelector: (selector) => selector === ".csk-landing-hero" ? hero : null,
+    querySelectorAll: () => [],
   };
+  const observers = [];
   const window = {
     innerHeight: 800,
     matchMedia: () => ({ matches: false }),
     IntersectionObserver: class {
-      observe() {}
-      disconnect() {}
+      observed = [];
+      constructor(callback, options) {
+        this.callback = callback;
+        this.options = options;
+        observers.push(this);
+      }
+      observe(element) {
+        this.observed.push(element);
+      }
+      unobserve(element) {
+        this.observed = this.observed.filter((observed) => observed !== element);
+      }
+      disconnect() {
+        this.observed = [];
+      }
     },
   };
+  return { root, window, observers, heroContent, latestPost, scrolledPast, onScreen, belowFold };
+}
 
-  initializeViewportReveals({ root, window, document: root });
+test("leaves landing content alone until the first viewport report", () => {
+  const page = landingPage();
+  initializeViewportReveals({ root: page.root, window: page.window, document: page.root });
 
-  for (const element of [heroContent, scrolledPast, belowFold]) {
-    assert.equal(element.classList.has("csk-reveal"), true);
+  const observer = page.observers.at(-1);
+  assert.deepEqual(observer.observed, [page.heroContent, page.scrolledPast, page.onScreen, page.belowFold]);
+  assert.equal(page.latestPost.classList.size, 0);
+  for (const element of observer.observed) assert.equal(element.classList.size, 0);
+});
+
+test("hides only landing content that the first report places below the viewport", () => {
+  const page = landingPage();
+  const reveals = initializeViewportReveals({ root: page.root, window: page.window, document: page.root });
+  const observer = page.observers.at(-1);
+  const entry = (target, top, isIntersecting = false) => ({ target, isIntersecting, boundingClientRect: { top } });
+
+  observer.callback([
+    entry(page.heroContent, 120, true),
+    entry(page.scrolledPast, -400),
+    entry(page.onScreen, 500, true),
+    entry(page.belowFold, 900),
+  ]);
+  for (const element of [page.heroContent, page.scrolledPast, page.onScreen]) {
+    assert.equal(element.classList.size, 0);
   }
-  assert.equal(heroContent.classList.has("csk-reveal--visible"), true);
-  assert.equal(scrolledPast.classList.has("csk-reveal--visible"), true);
-  assert.equal(belowFold.classList.has("csk-reveal--visible"), false);
+  assert.deepEqual([...page.belowFold.classList], ["csk-reveal"]);
+  assert.deepEqual(observer.observed, [page.belowFold]);
+
+  observer.callback([entry(page.belowFold, 600, true)]);
+  assert.deepEqual([...page.belowFold.classList], ["csk-reveal", "csk-reveal--visible"]);
+  assert.deepEqual(observer.observed, []);
+  reveals.destroy();
+});
+
+test("leaves landing content visible without motion", () => {
+  const page = landingPage();
+  page.window.matchMedia = () => ({ matches: true });
+  initializeViewportReveals({ root: page.root, window: page.window, document: page.root });
+  assert.equal(page.observers.length, 0);
+});
+
+test("measures landing content again when the first report arrives late", () => {
+  const page = landingPage();
+  page.belowFold.getBoundingClientRect = () => ({ top: 300 });
+  initializeViewportReveals({ root: page.root, window: page.window, document: page.root });
+  const observer = page.observers.at(-1);
+
+  observer.callback([{ target: page.belowFold, isIntersecting: false, boundingClientRect: { top: 900 } }]);
+  assert.equal(page.belowFold.classList.size, 0);
+  assert.equal(observer.observed.includes(page.belowFold), false);
 });

@@ -148,30 +148,7 @@ export function initializeViewportReveals({
   const scope = root ?? documentObject;
   const selector = ".csk-reveal";
   const visibleClass = "csk-reveal--visible";
-
-  if (automatic && scope?.querySelector) {
-    const hero = scope.querySelector(".csk-landing-hero");
-    if (hero) {
-      const candidates = [...(hero.children ?? [])];
-      for (const sibling of hero.parentElement?.children ?? []) {
-        if (sibling !== hero && sibling.matches?.("section")) candidates.push(sibling);
-      }
-
-      const viewportHeight = windowObject?.innerHeight ?? 0;
-      const reveals = candidates
-        .filter((element) => !(element.matches?.(".csk-latest-post-region")
-          || element.getAttribute?.("aria-hidden") === "true"
-          || element.matches?.(selector)
-          || element.querySelector?.(selector)))
-        .map((element) => [element, (element.getBoundingClientRect?.().top ?? 0) < viewportHeight]);
-      for (const [element, onScreen] of reveals) {
-        element.classList?.add("csk-reveal");
-        if (onScreen) element.classList?.add(visibleClass);
-      }
-    }
-  }
-
-  return revealOnIntersection({
+  const reveals = revealOnIntersection({
     root: scope,
     selector,
     visibleClass,
@@ -180,4 +157,46 @@ export function initializeViewportReveals({
     window: windowObject,
     document: documentObject,
   });
+
+  const hero = automatic ? scope?.querySelector?.(".csk-landing-hero") : undefined;
+  if (!hero || !windowObject || !("IntersectionObserver" in windowObject)
+    || windowObject.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return reveals;
+
+  const candidates = [...(hero.children ?? [])];
+  for (const sibling of hero.parentElement?.children ?? []) {
+    if (sibling !== hero && sibling.matches?.("section")) candidates.push(sibling);
+  }
+
+  const hidden = new Set();
+  const observer = new windowObject.IntersectionObserver((entries) => {
+    for (const { target, isIntersecting, boundingClientRect } of entries) {
+      if (!hidden.has(target)) {
+        const top = target.getBoundingClientRect?.().top ?? boundingClientRect.top;
+        if (top < windowObject.innerHeight) {
+          observer.unobserve(target);
+          continue;
+        }
+        hidden.add(target);
+        target.classList.add("csk-reveal");
+      }
+      if (!isIntersecting) continue;
+      target.classList.add(visibleClass);
+      observer.unobserve(target);
+    }
+  }, { threshold, rootMargin });
+
+  for (const element of candidates) {
+    if (element.matches?.(".csk-latest-post-region")
+      || element.getAttribute?.("aria-hidden") === "true"
+      || element.matches?.(selector)
+      || element.querySelector?.(selector)) continue;
+    observer.observe(element);
+  }
+
+  return {
+    destroy() {
+      reveals.destroy();
+      observer.disconnect();
+    },
+  };
 }
