@@ -169,6 +169,7 @@ test("builds a safe early theme initialization script", () => {
   assert.match(script, /#ffffff/);
   assert.match(script, /#000000/);
   assert.match(script, /prefers-color-scheme: dark/);
+  assert.match(script, /astro:before-swap/);
 });
 
 test("keeps shared theme toggles synchronized", () => {

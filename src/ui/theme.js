@@ -35,6 +35,9 @@ function initializeThemeDocument({
   root.dataset.theme = theme;
   applyColor(theme);
   addEventListener("csk:theme-change", (event) => applyColor(event.detail?.theme));
+  document.addEventListener("astro:before-swap", (event) => {
+    event.newDocument.documentElement.dataset.theme = root.dataset.theme;
+  });
 }
 
 export function initializeTheme(options) {
