@@ -24,6 +24,7 @@ export interface SiteKitStarlightOptions {
   themeToggle?: boolean;
   ui?: boolean;
   terminalCopy?: boolean;
+  clientRouter?: boolean;
 }
 
 export interface SiteKitStarlightPlugin {

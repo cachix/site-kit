@@ -11,6 +11,24 @@ export function defineNavbarActions(windowObject = window) {
   const { customElements, document, HTMLElement } = windowObject;
   if (customElements.get('csk-navbar-actions')) return;
 
+  let swap;
+  document.addEventListener('astro:before-swap', (event) => {
+    swap = {
+      current: [...document.querySelectorAll('csk-navbar-actions')],
+      next: [...event.newDocument.querySelectorAll('csk-navbar-actions')],
+    };
+  });
+  document.addEventListener('astro:after-swap', () => {
+    const { current = [], next = [] } = swap ?? {};
+    swap = undefined;
+    current.forEach((element, index) => {
+      const replacement = next[index];
+      if (element.isConnected && replacement && replacement.ownerDocument !== document) {
+        element.replaceWith(replacement);
+      }
+    });
+  });
+
   customElements.define('csk-navbar-actions', class extends HTMLElement {
     connectedCallback() {
       this.initializeMenu(windowObject, document);

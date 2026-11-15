@@ -247,3 +247,29 @@ test("keeps shared theme toggles synchronized", () => {
   element.disconnectedCallback();
   assert.equal(listeners.has(themeChangeEvent), false);
 });
+
+test("replaces navbar actions that a client-side swap kept", () => {
+  const listeners = new Map();
+  const replaced = [];
+  const kept = { isConnected: true, replaceWith: (element) => replaced.push(element) };
+  const swappedAway = { isConnected: false, replaceWith: (element) => replaced.push(element) };
+  const document = {
+    addEventListener: (name, listener) => listeners.set(name, listener),
+    querySelectorAll: () => [kept, swappedAway],
+  };
+  const newDocument = {};
+  const nextKept = { ownerDocument: newDocument };
+  const nextSwapped = { ownerDocument: newDocument };
+  newDocument.querySelectorAll = () => [nextKept, nextSwapped];
+  defineNavbarActions({
+    HTMLElement: class {},
+    customElements: { define() {}, get() {} },
+    document,
+  });
+
+  listeners.get("astro:before-swap")({ newDocument });
+  listeners.get("astro:after-swap")();
+  assert.deepEqual(replaced, [nextKept]);
+  listeners.get("astro:after-swap")();
+  assert.deepEqual(replaced, [nextKept]);
+});

@@ -95,6 +95,7 @@
   "peerDependencies": {
     "@astrojs/starlight": ">=0.34.0 <1.0.0",
     "astro": ">=5.0.0 <8.0.0",
+    "astro-vtbot": ">=3.1.0 <4.0.0",
     "starlight-blog": ">=0.25.0 <1.0.0",
     "starlight-llm-actions": ">=0.13.0 <1.0.0"
   },
@@ -103,6 +104,9 @@
       "optional": true
     },
     "astro": {
+      "optional": true
+    },
+    "astro-vtbot": {
       "optional": true
     },
     "starlight-blog": {
@@ -117,6 +121,7 @@
     "@astrojs/mdx": "7.0.8",
     "@astrojs/starlight": "0.41.4",
     "astro": "7.1.6",
+    "astro-vtbot": "3.1.0",
     "hast-util-select": "6.0.4",
     "rehype-parse": "9.0.1",
     "rehype-remark": "10.0.1",

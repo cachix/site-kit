@@ -1,0 +1,16 @@
+---
+import Default from 'virtual:cachix-site-kit/starlight-head';
+import ClientRouter from 'astro-vtbot/components/starlight/Base.astro';
+---
+
+<ClientRouter viewTransitionsFallback="swap">
+  <Default {...Astro.props} />
+</ClientRouter>
+
+<style is:global>
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+</style>

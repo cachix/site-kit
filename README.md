@@ -38,6 +38,16 @@ starlight({
 
 `siteKitStarlight()` installs the shared UI stylesheet, terminal command copy behavior, its stylesheet, and the landing-page Hero override. Explicit consumer overrides are preserved. Astro content collection declarations stay in each consumer so their framework version can infer the schema without crossing a package type boundary.
 
+### Client-side navigation
+
+`siteKitStarlight()` also turns on Astro's client router through [astro-vtbot](https://github.com/martrapp/astro-vtbot), so following a link swaps the page content instead of reloading the page. Install it in the consumer:
+
+```sh
+npm install astro-vtbot
+```
+
+The shared `Head` wraps the consumer's own `Head` override, so a site that already overrides `Head` keeps its additions. View transition animations are off, and `.js` assets are never inlined so scripts that move between pages run once. A module script runs once per visit, not once per page, so page scripts that touch the DOM must set up on `astro:page-load` and clean up on `astro:before-swap`. Pass `clientRouter: false` to keep full page loads.
+
 ### Markdown for agents
 
 `siteLlmActionsOptions(description)` configures [starlight-llm-actions](https://github.com/holdenhewett/starlight-llm-actions) so coding agents read plaintext instead of the rendered HTML shell:

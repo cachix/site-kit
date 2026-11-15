@@ -16,6 +16,7 @@ test("installs shared Starlight behavior", () => {
   assert.match(update.components.Footer, /Footer\.astro$/);
   assert.match(update.components.SocialIcons, /Navbar\.astro$/);
   assert.match(update.components.ThemeSelect, /ThemeSelect\.astro$/);
+  assert.match(update.components.Head, /starlight\/Head\.astro$/);
   assert.equal(update.customCss.length, 3);
   assert.match(update.customCss[1], /starlight\/docs\.css$/);
   assert.equal(update.expressiveCode.plugins[0].name, "Cachix terminal copy");
@@ -36,7 +37,7 @@ test("can disable the shared navbar", () => {
 
 test("preserves explicit consumer overrides", () => {
   let update;
-  siteKitStarlight().hooks["config:setup"]({
+  siteKitStarlight({ clientRouter: false }).hooks["config:setup"]({
     config: {
       components: {
         Footer: "./src/Footer.astro",
@@ -60,9 +61,64 @@ test("preserves explicit consumer overrides", () => {
   assert.equal(update.expressiveCode, undefined);
 });
 
+test("routes pages on the client around the consumer Head", () => {
+  let update;
+  let integration;
+  siteKitStarlight().hooks["config:setup"]({
+    astroConfig: { root: new URL("file:///project/") },
+    config: { components: { Head: "./src/Head.astro" } },
+    updateConfig: (value) => {
+      update = value;
+    },
+    addIntegration(value) {
+      integration = value;
+    },
+  });
+
+  assert.match(update.components.Head, /starlight\/Head\.astro$/);
+  let astroUpdate;
+  integration.hooks["astro:config:setup"]({
+    config: { vite: { build: { assetsInlineLimit: 100 } } },
+    updateConfig(value) {
+      astroUpdate = value;
+    },
+  });
+  const { build, plugins: [plugin] } = astroUpdate.vite;
+  assert.equal(build.assetsInlineLimit("chunk.js", Buffer.alloc(1)), false);
+  assert.equal(build.assetsInlineLimit("icon.svg", Buffer.alloc(99)), true);
+  assert.equal(build.assetsInlineLimit("icon.svg", Buffer.alloc(100)), false);
+  const id = plugin.resolveId("virtual:cachix-site-kit/starlight-head");
+  assert.equal(plugin.load(id), 'export { default } from "/project/src/Head.astro";');
+  assert.equal(plugin.resolveId("./other.js"), undefined);
+});
+
+test("wraps the default Starlight Head", () => {
+  let integration;
+  siteKitStarlight().hooks["config:setup"]({
+    config: {},
+    updateConfig() {},
+    addIntegration(value) {
+      integration = value;
+    },
+  });
+  let astroUpdate;
+  integration.hooks["astro:config:setup"]({
+    config: {},
+    updateConfig(value) {
+      astroUpdate = value;
+    },
+  });
+  const { build, plugins: [plugin] } = astroUpdate.vite;
+  assert.equal(build.assetsInlineLimit("icon.svg", Buffer.alloc(1)), undefined);
+  assert.equal(
+    plugin.load(plugin.resolveId("virtual:cachix-site-kit/starlight-head")),
+    'export { default } from "@astrojs/starlight/components/Head.astro";',
+  );
+});
+
 test("can disable every optional feature", () => {
   let called = false;
-  siteKitStarlight({ hideLandingHero: false, footer: false, navbar: false, ui: false, terminalCopy: false })
+  siteKitStarlight({ hideLandingHero: false, footer: false, navbar: false, ui: false, terminalCopy: false, clientRouter: false })
     .hooks["config:setup"]({
       config: {},
       updateConfig: () => {
@@ -74,7 +130,7 @@ test("can disable every optional feature", () => {
 
 test("passes footer data through a generated Astro integration", () => {
   let integration;
-  siteKitStarlight({ footer: { copyright: "Site Kit" } }).hooks["config:setup"]({
+  siteKitStarlight({ footer: { copyright: "Site Kit" }, clientRouter: false }).hooks["config:setup"]({
     config: {},
     updateConfig() {},
     addIntegration(value) {
