@@ -41,6 +41,11 @@ assert.match(html, /<csk-theme-toggle(?:\s|>)/);
 assert.match(html, /class="csk-navbar-link csk-navbar-docs[^"]*" href="\/components\/"/);
 assert.doesNotMatch(html, /class="csk-navbar-link csk-navbar-(?:docs|blog)[^"]*"[^>]*aria-current="page"/);
 assert.match(html, /<site-search/);
+assert.match(html, /<meta name="astro-view-transitions-enabled" content="true">/);
+assert.match(html, /<meta name="astro-view-transitions-fallback" content="swap">/);
+assert.match(html, /<meta name="vtbot-replace-swap"/);
+assert.doesNotMatch(html, /<script type="module">/);
+assert.match(css, /::view-transition-old\(\*\)/);
 assert.match(components, /class="csk-button(?:\s|")/);
 assert.match(components, /class="csk-button-group(?:\s|")/);
 assert.match(components, /class="csk-button__arrow" aria-hidden="true">→<\/span>/);
@@ -130,4 +135,4 @@ assert.match(llmsTxt, /\(https:\/\/site-kit\.invalid\/llms-full\.txt\)/);
 assert.match(llmsTxt, /\(https:\/\/site-kit\.invalid\/blog\/prototype\/index\.md\)/);
 assert.match(llmsFull, /# Site Kit prototype/);
 
-console.log("Verified shared Hero, terminal copy, agent markdown, and UI components in Astro output.");
+console.log("Verified shared Hero, client router, terminal copy, agent markdown, and UI components in Astro output.");

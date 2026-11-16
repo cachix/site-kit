@@ -58,6 +58,7 @@
       "import": "./src/starlight/index.js"
     },
     "./starlight/Navbar.astro": "./src/starlight/Navbar.astro",
+    "./starlight/Head.astro": "./src/starlight/Head.astro",
     "./starlight/blog": {
       "types": "./src/starlight/blog.d.ts",
       "import": "./src/starlight/blog.js"
@@ -91,6 +92,9 @@
     "test": "node --test tests/*.test.js",
     "test:astro": "astro check --root tests/fixtures/starlight && astro build --root tests/fixtures/starlight && node tests/verify-astro-build.js",
     "check": "npm run test && npm run test:astro && npm pack --dry-run"
+  },
+  "dependencies": {
+    "astro-vtbot": "^3.1.0"
   },
   "peerDependencies": {
     "@astrojs/starlight": ">=0.34.0 <1.0.0",

@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { terminalCopyPlugin } from "../terminal-copy/index.js";
 
+const headComponent = fileURLToPath(new URL("./Head.astro", import.meta.url));
 const heroComponent = fileURLToPath(new URL("./HideLandingHero.astro", import.meta.url));
 const footerComponent = fileURLToPath(new URL("./Footer.astro", import.meta.url));
 const navbarComponent = fileURLToPath(new URL("./Navbar.astro", import.meta.url));
@@ -8,7 +9,6 @@ const themeSelectComponent = fileURLToPath(new URL("./ThemeSelect.astro", import
 const docsStyles = fileURLToPath(new URL("./docs.css", import.meta.url));
 const uiStyles = fileURLToPath(new URL("../ui/styles.css", import.meta.url));
 const terminalCopyStyles = fileURLToPath(new URL("../terminal-copy/styles.css", import.meta.url));
-
 export function siteKitStarlight({
   hideLandingHero = true,
   footer = true,
@@ -16,6 +16,7 @@ export function siteKitStarlight({
   themeToggle = navbar,
   ui = true,
   terminalCopy = true,
+  clientRouter = true,
 } = {}) {
   return {
     name: "@cachix/site-kit",
@@ -60,6 +61,29 @@ export function siteKitStarlight({
             ...config.components,
             ...update.components,
             ThemeSelect: themeSelectComponent,
+          };
+        }
+        if (clientRouter) {
+          addIntegration?.({
+            name: "@cachix/site-kit/client-router",
+            hooks: {
+              "astro:config:setup"({ updateConfig: updateAstroConfig }) {
+                updateAstroConfig({
+                  vite: {
+                    build: {
+                      assetsInlineLimit: (filePath) => filePath.endsWith(".js") ? false : undefined,
+                    },
+                  },
+                });
+              },
+            },
+          });
+        }
+        if (clientRouter && !config.components?.Head) {
+          update.components = {
+            ...config.components,
+            ...update.components,
+            Head: headComponent,
           };
         }
 

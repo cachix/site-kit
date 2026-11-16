@@ -16,6 +16,7 @@ test("installs shared Starlight behavior", () => {
   assert.match(update.components.Footer, /Footer\.astro$/);
   assert.match(update.components.SocialIcons, /Navbar\.astro$/);
   assert.match(update.components.ThemeSelect, /ThemeSelect\.astro$/);
+  assert.match(update.components.Head, /starlight\/Head\.astro$/);
   assert.equal(update.customCss.length, 3);
   assert.match(update.customCss[1], /starlight\/docs\.css$/);
   assert.equal(update.expressiveCode.plugins[0].name, "Cachix terminal copy");
@@ -36,7 +37,7 @@ test("can disable the shared navbar", () => {
 
 test("preserves explicit consumer overrides", () => {
   let update;
-  siteKitStarlight().hooks["config:setup"]({
+  siteKitStarlight({ clientRouter: false }).hooks["config:setup"]({
     config: {
       components: {
         Footer: "./src/Footer.astro",
@@ -60,9 +61,40 @@ test("preserves explicit consumer overrides", () => {
   assert.equal(update.expressiveCode, undefined);
 });
 
+test("keeps scripts out of the HTML for the client router", () => {
+  let integration;
+  siteKitStarlight().hooks["config:setup"]({
+    config: {},
+    updateConfig() {},
+    addIntegration(value) {
+      integration = value;
+    },
+  });
+  let update;
+  integration.hooks["astro:config:setup"]({
+    updateConfig(value) {
+      update = value;
+    },
+  });
+  const { assetsInlineLimit } = update.vite.build;
+  assert.equal(assetsInlineLimit("chunk.js"), false);
+  assert.equal(assetsInlineLimit("icon.svg"), undefined);
+});
+
+test("leaves a consumer Head override in place", () => {
+  let update;
+  siteKitStarlight().hooks["config:setup"]({
+    config: { components: { Head: "./src/Head.astro" } },
+    updateConfig: (value) => {
+      update = value;
+    },
+  });
+  assert.equal(update.components.Head, "./src/Head.astro");
+});
+
 test("can disable every optional feature", () => {
   let called = false;
-  siteKitStarlight({ hideLandingHero: false, footer: false, navbar: false, ui: false, terminalCopy: false })
+  siteKitStarlight({ hideLandingHero: false, footer: false, navbar: false, ui: false, terminalCopy: false, clientRouter: false })
     .hooks["config:setup"]({
       config: {},
       updateConfig: () => {
@@ -74,7 +106,7 @@ test("can disable every optional feature", () => {
 
 test("passes footer data through a generated Astro integration", () => {
   let integration;
-  siteKitStarlight({ footer: { copyright: "Site Kit" } }).hooks["config:setup"]({
+  siteKitStarlight({ footer: { copyright: "Site Kit" }, clientRouter: false }).hooks["config:setup"]({
     config: {},
     updateConfig() {},
     addIntegration(value) {

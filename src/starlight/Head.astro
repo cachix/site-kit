@@ -1,0 +1,25 @@
+---
+import Default from '@astrojs/starlight/components/Head.astro';
+import ClientRouter from 'astro-vtbot/components/starlight/Base.astro';
+---
+
+<ClientRouter viewTransitionsFallback="swap">
+  <Default {...Astro.props} />
+</ClientRouter>
+
+<script>
+  document.addEventListener('astro:before-swap', (event) => {
+    const { theme } = document.documentElement.dataset;
+    if (theme) event.newDocument.documentElement.dataset.theme = theme;
+    const sidebar = document.getElementById('starlight__sidebar');
+    if (sidebar?.hasAttribute('popover')) sidebar.hidePopover();
+  });
+</script>
+
+<style is:global>
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+</style>

@@ -24,13 +24,20 @@ export function siteKitAstro({ github, rss } = {}) {
         const controller = new AbortController();
         globalThis[key] = controller;
         let reveals;
+        let restoresScroll = ["reload", "back_forward"].includes(performance.getEntriesByType("navigation")[0]?.type);
         const initialize = () => {
           reveals?.destroy();
-          reveals = initializeViewportReveals();
+          reveals = initializeViewportReveals({ automatic: !restoresScroll });
         };
         initialize();
-        document.addEventListener("astro:page-load", initialize, { signal: controller.signal });
-        document.addEventListener("astro:before-swap", () => reveals?.destroy(), { signal: controller.signal });
+        document.addEventListener("astro:before-swap", (event) => {
+          restoresScroll = event.navigationType === "traverse";
+          reveals?.destroy();
+        }, { signal: controller.signal });
+        document.addEventListener("astro:after-swap", () => {
+          document.documentElement.dataset.cskReveals = "";
+          initialize();
+        }, { signal: controller.signal });
       `);
       if (rssOptions) {
         injectRoute({ pattern: rssOptions.endpoint, entrypoint: rssEndpoint });
